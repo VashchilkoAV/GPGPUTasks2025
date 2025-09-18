@@ -5,6 +5,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <vector>
+#include <string>
 
 template<typename T>
 std::string to_string(T value)
@@ -119,20 +120,23 @@ int main()
 			cl_device_type deviceType = 0;
 			OCL_SAFE_CALL(clGetDeviceInfo(device, CL_DEVICE_TYPE, sizeof(cl_device_type), &deviceType, nullptr));
 
-			std::vector<char> deviceTypeString(3);
+			std::string deviceTypeString = "";
 			switch (deviceType)
 			{
 			case CL_DEVICE_TYPE_CPU:
-				deviceTypeString = {'c', 'p', 'u'};
+				deviceTypeString = "cpu";
 				break;
 			case CL_DEVICE_TYPE_GPU:
-				deviceTypeString = {'g', 'p', 'u'};
+				deviceTypeString = "gpu";
 				break;
 			case CL_DEVICE_TYPE_ACCELERATOR:
-				deviceTypeString = {'a', 'c', 'c'};
+				deviceTypeString = "accelerator";
 				break;
 			case CL_DEVICE_TYPE_DEFAULT:
-				deviceTypeString = {'d', 'e', 'f'};
+				deviceTypeString = "default";
+				break;
+			case CL_DEVICE_TYPE_CUSTOM:
+				deviceTypeString = "custom";
 				break;
 			default:
 				break;
@@ -144,7 +148,7 @@ int main()
 
 			cl_ulong deviceMemory = 0;
 			OCL_SAFE_CALL(clGetDeviceInfo(device, CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(cl_ulong), &deviceMemory, nullptr));
-			std::cout << "        Device memory: " << deviceMemory << " (" << deviceMemory / 1024 / 1024 << "Mb)"<< std::endl;
+			std::cout << "        Device memory: " << deviceMemory << " (" << deviceMemory / 1024. / 1024. << "Mb)"<< std::endl;
 			
 
 			cl_uint deviceClockFrequency = 0;
