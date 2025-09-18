@@ -143,8 +143,8 @@ int main()
 
 
 			cl_ulong deviceMemory = 0;
-			OCL_SAFE_CALL(clGetDeviceInfo(device, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(cl_ulong), &deviceMemory, nullptr));
-			std::cout << "        Device memory (Kb): " << deviceMemory / 1024 << std::endl;
+			OCL_SAFE_CALL(clGetDeviceInfo(device, CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(cl_ulong), &deviceMemory, nullptr));
+			std::cout << "        Device memory: " << deviceMemory << " (" << deviceMemory / 1024 / 1024 << "Mb)"<< std::endl;
 			
 
 			cl_uint deviceClockFrequency = 0;
