@@ -15,6 +15,22 @@ __kernel void aplusb_matrix_bad(__global const uint* a,
     // т.е. матрица выложена в памяти линейно ряд за рядом
     // т.е. если в матрице сделать шаг вправо или влево на одну ячейку - то в памяти мы шагнем на 4 байта
     // т.е. если в матрице сделать шаг вверх или вниз на одну ячейку - то в памяти мы шагнем на так называемый stride=width*4 байта
+    
+    
+    // first attempt -- 0.0695221 GB/s bandwidth
+    // const unsigned int index = get_global_id(0);
 
+    // for (unsigned int k = 0; k < height; k++) {
+    //     unsigned int col = index;
+    //     unsigned int row = k;
+        
+    //     c[row * width + col] = a[row * width + col] + b[row * width + col];
+    // }
+    //////////////////////
+
+    // second attempt -- 83.0335 GB/s
+    const unsigned int index_x = get_global_id(0);
+    const unsigned int index_y = get_global_id(1);
+    c[index_y * width + index_x] = a[index_y * width + index_x] + b[index_y * width + index_x];
     // TODO реализуйте этот кернел - просуммируйте две матрицы так чтобы получить максимально ПЛОХУЮ производительность с точки зрения memory coalesced паттерна доступа
 }
