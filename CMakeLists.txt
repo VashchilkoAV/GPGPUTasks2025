@@ -3,7 +3,14 @@ cmake_minimum_required(VERSION 3.20)
 project(GPGPUTasks)
 
 set(CMAKE_CXX_STANDARD 17)
-
+# set(CMAKE_IGNORE_PATH
+#     $ENV{CONDA_PREFIX}/bin $ENV{CONDA_PREFIX}/lib $ENV{CONDA_PREFIX}/include
+#     $ENV{CONDA_PREFIX}/Library/bin $ENV{CONDA_PREFIX}/Library/lib $ENV{CONDA_PREFIX}/Library/include
+#   )
+# set(CMAKE_IGNORE_PATH "/Applications/anaconda3/lib/cmake")
+# list(REMOVE_ITEM CMAKE_PREFIX_PATH "/Applications/anaconda3/lib/cmake")
+# list(REMOVE_ITEM CMAKE_PREFIX_PATH "/Applications/anaconda3")
+# target_include_directories(${PROJECT_NAME}_core PRIVATE /opt/vulkansdk/macOS/include)
 # Если вы установили CUDA SDK - можете включить поддержку CUDA
 option(GPU_CUDA_SUPPORT "CUDA support." OFF)
 
@@ -18,7 +25,19 @@ else ()
 endif ()
 
 # GTest позволяет писать удобные unit-test-ы
-find_package(GTest REQUIRED)
+# list(REMOVE_ITEM CMAKE_PREFIX_PATH "/Applications/anaconda3/lib/cmake")
+# list(REMOVE_ITEM CMAKE_PREFIX_PATH "/Applications/anaconda3")
+
+# find_package(GTest REQUIRED PATHS /usr/local/include/gtest/)
+# set(GTEST_ROOT "/opt/homebrew/lib/cmake/")
+
+
+# find_package(GTest REQUIRED)
+find_package(GTest REQUIRED PATHS /opt/homebrew/lib/cmake/GTest/GTestConfig.cmake)
+
+# set(GTEST_INCLUDE_DIRS "/opt/homebrew/include/gtest")
+# set(GTEST_LIBRARIES "/opt/homebrew/lib/libgtest.a")
+# set(GTEST_MAIN_LIBRARIES "/opt/homebrew/lib/libgtest_main.a")
 set(GTEST_LIBRARIES GTest::gtest)
 set(GTEST_MAIN_LIBRARIES GTest::gtest_main)
 set(GTEST_BOTH_LIBRARIES ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
