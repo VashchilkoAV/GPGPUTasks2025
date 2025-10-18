@@ -17,5 +17,22 @@ __kernel void sum_04_local_reduction(__global const uint* a,
     // __local uint local_data[GROUP_SIZE];
     // barrier(CLK_LOCAL_MEM_FENCE);
 
-    // TODO
+    __local uint local_data[GROUP_SIZE];
+
+    const uint index = get_global_id(0);
+    const uint local_index = get_local_id(0);
+
+    if (index < n) {
+        local_data[local_index] = a[index];
+    }
+
+    barrier(CLK_LOCAL_MEM_FENCE); // fast!!!
+
+    if (local_index == 0) {
+        unsigned int group_sum = 0;
+        for (unsigned int i = 0; i < GROUP_SIZE; i++) {
+            group_sum += (index + i < n) ? local_data[i] : 0;
+        }
+        b[index / GROUP_SIZE] = group_sum;
+    } 
 }
