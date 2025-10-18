@@ -22,9 +22,15 @@ __kernel void sum_04_local_reduction(__global const uint* a,
     const uint index = get_global_id(0);
     const uint local_index = get_local_id(0);
 
-    if (index < n) {
-        local_data[local_index] = a[index];
+    uint my_sum = 0;
+
+    uint index_multiplier = (n + LOAD_K_VALUES_PER_ITEM_REDUCTION - 1) / LOAD_K_VALUES_PER_ITEM_REDUCTION;
+    for (uint i = 0; i < LOAD_K_VALUES_PER_ITEM_REDUCTION; ++i) {
+        if (index < index_multiplier) {
+            my_sum += a[i * index_multiplier + index];
+        }
     }
+    local_data[local_index] = my_sum;
 
     barrier(CLK_LOCAL_MEM_FENCE); // fast!!!
 

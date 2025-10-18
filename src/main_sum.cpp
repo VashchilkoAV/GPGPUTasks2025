@@ -135,19 +135,19 @@ void run(int argc, char** argv)
                         bool use_first = false, use_second = false;
                         while (current_task_size > 1) {
                             if (!use_first && !use_second) {
-                                ocl_sum04LocalReduction.exec(gpu::WorkSize(GROUP_SIZE, current_task_size), input_gpu, reduction_buffer1_gpu, current_task_size);
+                                ocl_sum04LocalReduction.exec(gpu::WorkSize(GROUP_SIZE, div_ceil(current_task_size, (unsigned int)LOAD_K_VALUES_PER_ITEM_REDUCTION)), input_gpu, reduction_buffer1_gpu, current_task_size);
                                 use_first = true;
                             } else if (use_first) {
                                 use_first = false;
                                 use_second = true;
-                                ocl_sum04LocalReduction.exec(gpu::WorkSize(GROUP_SIZE, current_task_size), reduction_buffer1_gpu, reduction_buffer2_gpu, current_task_size);
+                                ocl_sum04LocalReduction.exec(gpu::WorkSize(GROUP_SIZE, div_ceil(current_task_size, (unsigned int)LOAD_K_VALUES_PER_ITEM_REDUCTION)), reduction_buffer1_gpu, reduction_buffer2_gpu, current_task_size);
                             } else if (use_second) {
                                 use_second = false;
                                 use_first = true;
-                                ocl_sum04LocalReduction.exec(gpu::WorkSize(GROUP_SIZE, current_task_size), reduction_buffer2_gpu, reduction_buffer1_gpu, current_task_size);
+                                ocl_sum04LocalReduction.exec(gpu::WorkSize(GROUP_SIZE, div_ceil(current_task_size, (unsigned int)LOAD_K_VALUES_PER_ITEM_REDUCTION)), reduction_buffer2_gpu, reduction_buffer1_gpu, current_task_size);
                             }
 
-                            current_task_size = div_ceil(current_task_size, (unsigned int)GROUP_SIZE);
+                            current_task_size = div_ceil(current_task_size, (unsigned int)GROUP_SIZE * (unsigned int)LOAD_K_VALUES_PER_ITEM_REDUCTION);
                         }
 
                         if (use_first) {
