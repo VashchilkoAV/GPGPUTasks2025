@@ -8,3 +8,4 @@
 - [Задание 3](https://github.com/GPGPUCourse/GPGPUTasks2025/tree/task03): ```[до 13.10, 10 баллов]``` Транспонирование матрицы. Умножение матриц. Дополнительные баллы ```престижа``` за Tensor Cores (CUDA, WMMA) или cooperative matrix (расширение Vulkan).
 - [Задание 4](https://github.com/GPGPUCourse/GPGPUTasks2025/tree/task04): ```[до 20.10, 10 баллов]``` Префиксные суммы. Дополнительные баллы ```престижа``` за что-то **ДЕЙСТВИТЕЛЬНО** быстрое.
 - [Задание 5](https://github.com/GPGPUCourse/GPGPUTasks2025/tree/task05): ```[до 27.10, 10 баллов]``` Radix sort (поразрядная сортировка). Выдаются дополнительные баллы ```престижа```.
+- [Задание 6](https://github.com/GPGPUCourse/GPGPUTasks2025/tree/task06): ```[до 03.11, 10 баллов]``` Merge sort (сортировка слиянием).
