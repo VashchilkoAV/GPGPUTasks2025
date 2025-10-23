@@ -42,10 +42,10 @@ __kernel void matrix_04_multiply_via_local_memory(
 
         for (uint inner_num = 0; inner_num < local_h; inner_num++) {
             // if ((tile_y * local_h + local_row) * w + (tile_x * local_w + inner_num) < h * k) {
-            if ((tile_y * local_h + local_row) < h && (tile_inner * local_w + inner_num) < k) {
+            // if ((tile_y * local_h + local_row) < h && (tile_inner * local_w + inner_num) < k) {
                 // value += (double) (a[(tile_y * local_h + local_row) * k + (tile_inner * local_w + inner_num)] * local_data[inner_num * local_w + local_col]);
-                value += a[(tile_y * local_h + local_row) * k + (tile_inner * local_w + inner_num)] * local_data[inner_num * local_w + local_col];
-            }
+            value += a[(tile_y * local_h + local_row) * k + (tile_inner * local_w + inner_num)] * local_data[inner_num * local_w + local_col];
+            // }
         }
         barrier(CLK_LOCAL_MEM_FENCE);
     }
