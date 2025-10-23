@@ -21,36 +21,33 @@ __kernel void matrix_04_multiply_via_local_memory(
     const uint local_w = get_local_size(0);
     const uint local_h = get_local_size(1);
 
-    const uint tile_x = col / local_w;
-    const uint tile_y = row / local_h;
+    const uint tile_x = get_group_id(0);
+    const uint tile_y = get_group_id(1);
 
     const uint tile_count = (k + local_w - 1) / local_w;
 
-    __local float local_data[GROUP_SIZE_X * GROUP_SIZE_Y];
+    __local float local_dataB[GROUP_SIZE_X * GROUP_SIZE_Y];
+    __local float local_dataA[GROUP_SIZE_X * GROUP_SIZE_Y];
 
     // double value = 0; 
     float value = 0; 
     // развернуть итерацию -- итерироваться внутри столбца второй матрицы!
     for (uint tile_inner = 0; tile_inner < tile_count; tile_inner++) {
-        // if ((tile_inner * local_h + local_row) * w + (tile_x * local_w + local_col) < k * w) {
-            local_data[local_row * local_w + local_col] = b[(tile_inner * local_h + local_row) * w + (tile_x * local_w + local_col)];            
-        // } else {
-        //     local_data[local_row * local_w + local_col] = 0;
-        // }
+        const uint tile_col = tile_inner * local_w + local_col;
+        const uint tile_row = tile_inner * local_w + local_row;
+
+        local_dataA[local_row * local_w + local_col] = a[row * k + tile_col];
+        local_dataB[local_row * local_w + local_col] = b[tile_row * w + col];            
         
         barrier(CLK_LOCAL_MEM_FENCE);
 
-        for (uint inner_num = 0; inner_num < local_h; inner_num++) {
-            // if ((tile_y * local_h + local_row) * w + (tile_x * local_w + inner_num) < h * k) {
-            // if ((tile_y * local_h + local_row) < h && (tile_inner * local_w + inner_num) < k) {
-                // value += (double) (a[(tile_y * local_h + local_row) * k + (tile_inner * local_w + inner_num)] * local_data[inner_num * local_w + local_col]);
-            value += a[(tile_y * local_h + local_row) * k + (tile_inner * local_w + inner_num)] * local_data[inner_num * local_w + local_col];
-            // }
+        for (uint inner_num = 0; inner_num < GROUP_SIZE_X; inner_num++) {
+            value += local_dataA[local_row * GROUP_SIZE_X + inner_num] * local_dataB[inner_num * GROUP_SIZE_X + local_col];
+            // if use local_h instead of  GROUP_SIZE_X it is 3 times slower
         }
         barrier(CLK_LOCAL_MEM_FENCE);
     }
 
-    // c[(tile_y * local_h + local_row) * w + (tile_x * local_w + local_col)] = (float)value;
-    c[(tile_y * local_h + local_row) * w + (tile_x * local_w + local_col)] = value;
+    c[row * w + col] = value;
     
 }
