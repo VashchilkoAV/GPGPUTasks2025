@@ -34,16 +34,16 @@ __kernel void matrix_04_multiply_via_local_memory(
         // printf("%f\n", registers[reg_num]);
     }
 
-    __local float local_dataB[GROUP_SIZE_X * GROUP_SIZE_Y];
-    __local float local_dataA[GROUP_SIZE_X * GROUP_SIZE_Y];
+    __local float local_dataB[(GROUP_SIZE_X + 2) * GROUP_SIZE_Y];
+    __local float local_dataA[(GROUP_SIZE_X + 2) * GROUP_SIZE_Y];
 
     for (uint tile_inner = 0; tile_inner < tile_count; tile_inner++) {
         const uint tile_col = tile_inner * GROUP_SIZE_X + local_col;
         const uint tile_row = tile_inner * GROUP_SIZE_X + local_row;
         
         for (uint reg_num = 0; reg_num < REGISTER_GROUP_SIZE_X; reg_num++) {
-            local_dataA[local_row * GROUP_SIZE_X + local_col + reg_num * THREADS_PER_TILE_REGISTER] = a[row * k + tile_col + reg_num * THREADS_PER_TILE_REGISTER];
-            local_dataB[local_row * GROUP_SIZE_X + local_col + reg_num * THREADS_PER_TILE_REGISTER] = b[tile_row * w + col + reg_num * THREADS_PER_TILE_REGISTER];  
+            local_dataA[local_row * (GROUP_SIZE_X + 2) + local_col + reg_num * THREADS_PER_TILE_REGISTER] = a[row * k + tile_col + reg_num * THREADS_PER_TILE_REGISTER];
+            local_dataB[local_row * (GROUP_SIZE_X + 2) + local_col + reg_num * THREADS_PER_TILE_REGISTER] = b[tile_row * w + col + reg_num * THREADS_PER_TILE_REGISTER];  
         }
                   
         
@@ -51,7 +51,7 @@ __kernel void matrix_04_multiply_via_local_memory(
 
         for (uint inner_num = 0; inner_num < GROUP_SIZE_X; inner_num++) {
             for (uint reg_num = 0; reg_num < REGISTER_GROUP_SIZE_X; reg_num++) {
-                registers[reg_num] += local_dataA[local_row * GROUP_SIZE_X + inner_num] * local_dataB[inner_num * GROUP_SIZE_X + local_col + reg_num * THREADS_PER_TILE_REGISTER];
+                registers[reg_num] += local_dataA[local_row * (GROUP_SIZE_X + 2) + inner_num] * local_dataB[inner_num * (GROUP_SIZE_X + 2) + local_col + reg_num * THREADS_PER_TILE_REGISTER];
                 // printf("%f\n", registers[reg_num]);
             // if use local_h instead of  GROUP_SIZE_X it is 3 times slower
             }
