@@ -7,7 +7,7 @@
 
 #define RASSERT_ENABLED 0 // disabled by default, enable for debug by changing 0 to 1, disable before performance evaluation/profiling/commiting
 
-#define LOAD_K_VALUES_PER_ITEM 8
-#define LOAD_K_VALUES_PER_ITEM_REDUCTION 8
+#define LOAD_K_VALUES_PER_ITEM 16
+#define LOAD_K_VALUES_PER_ITEM_REDUCTION 16
 
 #endif // pragma once
