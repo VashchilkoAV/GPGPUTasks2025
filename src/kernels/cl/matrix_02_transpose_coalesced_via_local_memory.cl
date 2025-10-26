@@ -26,7 +26,7 @@ __kernel void matrix_02_transpose_coalesced_via_local_memory(
 
     // local data
     // local_data[local_row * local_w + local_col] = matrix[row * w + col];
-    local_data[local_row * local_w + local_col] = matrix[(tile_y * local_h + local_row) * w + (tile_x * local_w + local_col)];
+    local_data[local_row * GROUP_SIZE_X + local_col] = matrix[(tile_y * GROUP_SIZE_Y + local_row) * w + (tile_x * GROUP_SIZE_X + local_col)];
     
     
     // if (col != tile_x * local_w + local_col) {
@@ -52,7 +52,7 @@ __kernel void matrix_02_transpose_coalesced_via_local_memory(
     // transposed_matrix[(tile_x * local_w + local_col) * h + (tile_y * local_w + local_row)] = local_data[local_row * local_w + local_col];
     
     // local memory coalesced write
-    transposed_matrix[(tile_x * local_w + local_row) * h + (tile_y * local_w + local_col)] = local_data[local_col * local_h + local_row];
+    transposed_matrix[(tile_x * GROUP_SIZE_X + local_row) * h + (tile_y * GROUP_SIZE_X + local_col)] = local_data[local_col * GROUP_SIZE_Y + local_row];
 
     // if (tile_x * local_h + local_col < w && tile_y * local_w + local_row < h) {
     //     transposed_matrix[(tile_x * local_h + local_col) * h + (tile_y * local_w + local_row)] = local_data[local_col * local_w + local_row];
