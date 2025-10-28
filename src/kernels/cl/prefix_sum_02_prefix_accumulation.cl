@@ -17,9 +17,14 @@ __kernel void prefix_sum_02_prefix_accumulation(
     const uint index = get_global_id(0);
     const uint flag = (uint) 1 << pow2;
     // printf("flag=%u\n", flag);
-    if (index < n && (index & flag)) {
-        // printf("index=%u &flag=%u powe_index=%u\n", index, index & flag, index - (index %  flag));
-        prefix_sum_accum[index] += pow2_sum[index - (index %  flag) - 1];
+
+    uint check_index = index + INCLUSIVE;
+    uint power_index = check_index - (check_index % flag) - 1;
+
+
+    if (index < n && (check_index & flag)) {
+        prefix_sum_accum[index] += pow2_sum[power_index];
+        // printf("index=%u &flag=%u powe_index=%u\n", index, check_index & flag, power_index);
     }
     // uint sum = 0
 

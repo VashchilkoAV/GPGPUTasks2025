@@ -17,7 +17,7 @@ __kernel void prefix_sum_01_reduction(
     uint global_index = get_global_id(0);
 
     uint sum = 0;
-    uint pow_multiplier = uint (1) << current_pow;
+    uint pow_multiplier = (uint) (1) << current_pow;
     uint pow_offset = (uint) (1) << (current_pow - 1);
 
     for (uint reduction_step_num = 0; reduction_step_num < NUM_REDUCTIONS_PER_RUN; reduction_step_num++) {
