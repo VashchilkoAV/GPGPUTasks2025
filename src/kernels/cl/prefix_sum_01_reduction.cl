@@ -14,27 +14,66 @@ __kernel void prefix_sum_01_reduction(
     unsigned int current_pow,
     unsigned int n)
 {
-    uint global_index = get_global_id(0);
 
-    uint sum = 0;
-    uint pow_multiplier = uint (1) << current_pow;
-    uint pow_offset = (uint) (1) << (current_pow - 1);
+///////////////// Точно будет проблема с нечетными степенями и четным числом редукций!!!!!!!
+    uint global_index = get_global_id(0);
+    uint local_index = get_local_id(0);
+    uint group_index = get_group_id(0);
+    uint num_groups = get_num_groups(0);
+    // uint group_lower_bound = group_index * ((n + num_groups - 1) / num_groups), group_upper_bound = (group_index + 1) * ((n + num_groups - 1) / num_groups);
+    uint group_lower_bound = group_index * GROUP_SIZE * (uint) 1 << current_pow, group_upper_bound = (group_index + 1) * GROUP_SIZE * (uint) 1 << current_pow;
+    if (num_groups == 1) {
+        group_lower_bound = 0;
+        group_upper_bound = n;
+    }
 
     for (uint reduction_step_num = 0; reduction_step_num < NUM_REDUCTIONS_PER_RUN; reduction_step_num++) {
-        if ((global_index + 1) * pow_multiplier - 1 < n) {
-            rassert((global_index + 1) * pow_multiplier - 1 < n, 24572375);
-            rassert((global_index + 1) * pow_multiplier - 1 - pow_offset < n, 4697045978);
-            if (reduction_step_num == 0) {
-                next_pow2_sum[(global_index + 1) * pow_multiplier - 1] = pow2_sum[(global_index + 1) * pow_multiplier - 1] + pow2_sum[(global_index + 1) * pow_multiplier - 1 - pow_offset];
-            } else {
-                next_pow2_sum[(global_index + 1) * pow_multiplier - 1] = next_pow2_sum[(global_index + 1) * pow_multiplier - 1] + next_pow2_sum[(global_index + 1) * pow_multiplier - 1 - pow_offset];
+        // if (local_index == 0 && group_index == num_groups - 1) {
+        //     // printf("1 << %u = %u\n", current_pow + reduction_step_num, 1u << (current_pow + reduction_step_num));
+        //     printf("%u %u\n", 8 + current_pow, num_groups);
+        // }
+        uint pow_multiplier = 1u << (current_pow + reduction_step_num);
+        uint pow_offset = 1u << (current_pow + reduction_step_num - 1);
+        
+        // uint element_index = (global_index + 1) * pow_multiplier - 1;
+        uint element_index = group_lower_bound + (local_index + 1) * pow_multiplier - 1;
+
+        if (element_index < n) {
+        // if (1) {
+
+            rassert(element_index < n, 24572375);
+            rassert(element_index - pow_offset < n, 4697045978);
+            if (element_index < group_upper_bound && element_index >= group_lower_bound) {
+                if (reduction_step_num == 0) {
+                    // if (element_index == 515) {
+                    //     printf("write to idx=%u: next[%u]=%u + next[%u]=%u\n", element_index, element_index, pow2_sum[element_index], element_index - pow_offset, pow2_sum[element_index - pow_offset]);
+                    // }
+                    next_pow2_sum[element_index] = pow2_sum[element_index] + pow2_sum[element_index - pow_offset];
+                    // if (element_index == 515) {
+                    //     printf("write to idx=515 done, value=%u\n", next_pow2_sum[515]);
+                    // }
+                } else {
+                    // if (element_index == 515) {
+                    // // if (element_index > 511) {
+                    //     // printf("write to idx=%u: next[%u]=%u + next[%u]=%u\n", element_index, element_index, next_pow2_sum[element_index], element_index - pow_offset, next_pow2_sum[element_index - pow_offset]);
+                    // }
+                    next_pow2_sum[element_index] = next_pow2_sum[element_index] + next_pow2_sum[element_index - pow_offset];
+                }
             }
+            
+            // if (global_index == 0) {
+            //     printf("next[867]=%u\n", next_pow2_sum[867]);
+            // }
         } else {
-            // printf("%u\n", global_index);
+            // if (reduction_step_num == 0) {
+            //     printf("%u\n", element_index);
+            // }
         }
+        barrier(CLK_LOCAL_MEM_FENCE);
+
         
         // if (global_index == 0) {
-        //     printf("%u %u %u %u\n", (global_index + 1) * pow_multiplier - 1, (global_index + 1) * pow_multiplier - 1 - pow_offset, pow2_sum[(global_index + 1) * pow_multiplier - 1], pow2_sum[(global_index + 1) * pow_multiplier - 1 - pow_offset]);
+        //     printf("%u %u %u %u\n", element_index, element_index - pow_offset, pow2_sum[element_index], pow2_sum[element_index - pow_offset]);
         // }
         pow_multiplier = pow_multiplier << 1;
         pow_offset = pow_offset << 1;
