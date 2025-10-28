@@ -9,4 +9,6 @@
 
 #define NUM_REDUCTIONS_PER_RUN 1
 
+#define INCLUSIVE 1
+
 #endif // pragma once

@@ -78,8 +78,7 @@ void run(int argc, char** argv)
             cur_pow++;
             bool f1 = false, f2 = false;
             uint cur_size = div_ceil(n, 2u);
-            while (cur_size > 1) {
-            // for (uint i = 0; i < 4; i++) {
+            while (cur_size > 0) {
                 if (!f1 && !f2) {
                     ocl_sum_reduction.exec(gpu::WorkSize(GROUP_SIZE, cur_size), input_gpu, buffer1_pow2_sum_gpu, cur_pow, n);
                     ocl_prefix_accumulation.exec(gpu::WorkSize(GROUP_SIZE, n), buffer1_pow2_sum_gpu, prefix_sum_accum_gpu, n, cur_pow);
@@ -95,8 +94,9 @@ void run(int argc, char** argv)
                     f2 = false;
                     f1 = true;
                 }
-                
-
+                if (cur_size == 1) {
+                    break;
+                }
 
                 cur_pow += NUM_REDUCTIONS_PER_RUN;
                 cur_size = div_ceil(cur_size, ((uint) 1 << NUM_REDUCTIONS_PER_RUN));
@@ -111,7 +111,6 @@ void run(int argc, char** argv)
             //     gpu_prefix_sum = buffer2_pow2_sum_gpu.readVector();
             // }
             gpu_prefix_sum = prefix_sum_accum_gpu.readVector();
-            std::cout << gpu_prefix_sum << '\n';
             // ocl_prefix_accumulation.exec();
         } else if (context.type() == gpu::Context::TypeCUDA) {
             // TODO
@@ -143,8 +142,13 @@ void run(int argc, char** argv)
     // Сверяем результат
     size_t cpu_sum = 0;
     for (size_t i = 0; i < n; ++i) {
-        cpu_sum += as[i];
+        if (INCLUSIVE) {
+            cpu_sum += as[i];
+        }
         rassert(cpu_sum == gpu_prefix_sum[i], 566324523452323, cpu_sum, gpu_prefix_sum[i], i);
+        if (!INCLUSIVE) {
+            cpu_sum += as[i];
+        }
     }
 
     // Проверяем что входные данные остались нетронуты (ведь мы их переиспользуем от итерации к итерации)
