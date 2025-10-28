@@ -55,6 +55,7 @@ void run(int argc, char** argv)
 
     // Прогружаем входные данные по PCI-E шине: CPU RAM -> GPU VRAM
     input_gpu.writeN(as.data(), n);
+    prefix_sum_accum_gpu.fill(0);
 
     // Запускаем кернел (несколько раз и с замером времени выполнения)
     std::vector<double> times;
@@ -64,10 +65,53 @@ void run(int argc, char** argv)
         // Запускаем кернел, с указанием размера рабочего пространства и передачей всех аргументов
         // Если хотите - можете удалить ветвление здесь и оставить только тот код который соответствует вашему выбору API
         if (context.type() == gpu::Context::TypeOpenCL) {
+            gpu::WorkSize workSize(GROUP_SIZE, div_ceil(n, 2u));
             // TODO
-            throw std::runtime_error(CODE_IS_NOT_IMPLEMENTED);
             // ocl_fill_with_zeros.exec();
-            // ocl_sum_reduction.exec();
+            buffer1_pow2_sum_gpu.fill(0);
+            buffer2_pow2_sum_gpu.fill(0);
+            
+            uint cur_pow = 0;
+
+            ocl_prefix_accumulation.exec(gpu::WorkSize(GROUP_SIZE, n), input_gpu, prefix_sum_accum_gpu, n, cur_pow);
+            
+            cur_pow++;
+            bool f1 = false, f2 = false;
+            uint cur_size = div_ceil(n, 2u);
+            while (cur_size > 1) {
+            // for (uint i = 0; i < 4; i++) {
+                if (!f1 && !f2) {
+                    ocl_sum_reduction.exec(gpu::WorkSize(GROUP_SIZE, cur_size), input_gpu, buffer1_pow2_sum_gpu, cur_pow, n);
+                    ocl_prefix_accumulation.exec(gpu::WorkSize(GROUP_SIZE, n), buffer1_pow2_sum_gpu, prefix_sum_accum_gpu, n, cur_pow);
+                    f1 = true;
+                } else if (f1) {
+                    ocl_sum_reduction.exec(gpu::WorkSize(GROUP_SIZE, cur_size), buffer1_pow2_sum_gpu, buffer2_pow2_sum_gpu, cur_pow, n);
+                    ocl_prefix_accumulation.exec(gpu::WorkSize(GROUP_SIZE, n), buffer2_pow2_sum_gpu, prefix_sum_accum_gpu, n, cur_pow);
+                    f1 = false;
+                    f2 = true;
+                } else {
+                    ocl_sum_reduction.exec(gpu::WorkSize(GROUP_SIZE, cur_size), buffer2_pow2_sum_gpu, buffer1_pow2_sum_gpu, cur_pow, n);
+                    ocl_prefix_accumulation.exec(gpu::WorkSize(GROUP_SIZE, n), buffer1_pow2_sum_gpu, prefix_sum_accum_gpu, n, cur_pow);
+                    f2 = false;
+                    f1 = true;
+                }
+                
+
+
+                cur_pow += NUM_REDUCTIONS_PER_RUN;
+                cur_size = div_ceil(cur_size, ((uint) 1 << NUM_REDUCTIONS_PER_RUN));
+            }
+            
+            // ocl_sum_reduction.exec(workSize, input_gpu, buffer1_pow2_sum_gpu, n);
+
+            std::vector<unsigned int> gpu_prefix_sum;
+            // if (f1) {
+            //     gpu_prefix_sum = buffer1_pow2_sum_gpu.readVector();
+            // } else {
+            //     gpu_prefix_sum = buffer2_pow2_sum_gpu.readVector();
+            // }
+            gpu_prefix_sum = prefix_sum_accum_gpu.readVector();
+            std::cout << gpu_prefix_sum << '\n';
             // ocl_prefix_accumulation.exec();
         } else if (context.type() == gpu::Context::TypeCUDA) {
             // TODO
