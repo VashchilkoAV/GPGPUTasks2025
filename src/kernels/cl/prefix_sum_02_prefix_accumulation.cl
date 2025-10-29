@@ -21,15 +21,18 @@ __kernel void prefix_sum_02_prefix_accumulation(
         // printf("flag=%u\n", flag);
 
         uint check_index = index + INCLUSIVE;
-        uint power_index = check_index - (check_index % flag) - 1;
-
+        // uint power_index = check_index - (check_index % flag) - 1;
+        uint power_index = check_index >> (pow2 + 1);
 
         if (index < n && (check_index & flag)) {
             prefix_sum_accum[index] += pow2_sum[power_index];
+            // if (index == 1023) {
+            //     printf("+ pow2_sum[%u](%u) = %u\n", power_index, pow2_sum[power_index], prefix_sum_accum[index]);
+            // } 
             // printf("index=%u &flag=%u powe_index=%u\n", index, check_index & flag, power_index);
         }
 
-        if (pow2 == 0) {
+        if (pow2 == 0) { // delete when make a special fused kernel for first step!!!
             break;
         }
     }
