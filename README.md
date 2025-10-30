@@ -9,3 +9,4 @@
 - [Задание 4](https://github.com/GPGPUCourse/GPGPUTasks2025/tree/task04): ```[до 20.10, 10 баллов]``` Префиксные суммы. Дополнительные 5 баллов ```престижа``` за 23.9+ GB/s.
 - [Задание 5](https://github.com/GPGPUCourse/GPGPUTasks2025/tree/task05): ```[до 27.10, 10 баллов]``` Radix sort (поразрядная сортировка). Ценник баллов ```престижа```: 5 за 200+ КК/s, 1 за 100+ KK/s.
 - [Задание 6](https://github.com/GPGPUCourse/GPGPUTasks2025/tree/task06): ```[до 03.11, 10 баллов]``` Merge sort (сортировка слиянием).
+- [Задание 7](https://github.com/GPGPUCourse/GPGPUTasks2025/tree/task07): ```[до 10.11, 5 баллов]``` SpMV (умножение разреженной CSR-матрицы на вектор).
