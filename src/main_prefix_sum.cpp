@@ -42,6 +42,7 @@ void run(int argc, char** argv)
     avk2::KernelSource vk_prefix_accumulation(avk2::getPrefixSum02PrefixAccumulation());
 
     unsigned int n = 100*1000*1000;
+    // unsigned int n = 1000 * 1000;
     std::vector<unsigned int> as(n, 0);
     size_t total_sum = 0;
     for (size_t i = 0; i < n; ++i) {
@@ -55,7 +56,6 @@ void run(int argc, char** argv)
 
     // Прогружаем входные данные по PCI-E шине: CPU RAM -> GPU VRAM
     input_gpu.writeN(as.data(), n);
-    prefix_sum_accum_gpu.fill(0);
 
     // Запускаем кернел (несколько раз и с замером времени выполнения)
     std::vector<double> times;
@@ -68,6 +68,7 @@ void run(int argc, char** argv)
             gpu::WorkSize workSize(GROUP_SIZE, div_ceil(n, 2u));
             // TODO
             // ocl_fill_with_zeros.exec();
+            prefix_sum_accum_gpu.fill(0);
             buffer1_pow2_sum_gpu.fill(0);
             buffer2_pow2_sum_gpu.fill(0);
             
