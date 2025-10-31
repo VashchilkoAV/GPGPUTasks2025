@@ -67,10 +67,12 @@ void run(int argc, char** argv)
         if (context.type() == gpu::Context::TypeOpenCL) {
             gpu::WorkSize workSize(GROUP_SIZE, div_ceil(n, 2u));
             // TODO
-            // ocl_fill_with_zeros.exec();
-            prefix_sum_accum_gpu.fill(0);
-            buffer1_pow2_sum_gpu.fill(0);
-            buffer2_pow2_sum_gpu.fill(0);
+            ocl_fill_with_zeros.exec(gpu::WorkSize(GROUP_SIZE, n), prefix_sum_accum_gpu, n);
+            ocl_fill_with_zeros.exec(gpu::WorkSize(GROUP_SIZE, n), buffer1_pow2_sum_gpu, n);
+            ocl_fill_with_zeros.exec(gpu::WorkSize(GROUP_SIZE, n), buffer2_pow2_sum_gpu, n);
+            // prefix_sum_accum_gpu.fill(0);
+            // buffer1_pow2_sum_gpu.fill(0);
+            // buffer2_pow2_sum_gpu.fill(0);
             
             uint cur_pow = 0;
 
