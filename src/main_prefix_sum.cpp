@@ -65,44 +65,20 @@ void run(int argc, char** argv)
         // Запускаем кернел, с указанием размера рабочего пространства и передачей всех аргументов
         // Если хотите - можете удалить ветвление здесь и оставить только тот код который соответствует вашему выбору API
         if (context.type() == gpu::Context::TypeOpenCL) {
-            gpu::WorkSize workSize(GROUP_SIZE, div_ceil(n, 2u));
             // TODO
             // ocl_fill_with_zeros.exec();
+            prefix_sum_accum_gpu.fill(0);
             buffer1_pow2_sum_gpu.fill(0);
             buffer2_pow2_sum_gpu.fill(0);
             
-            uint cur_pow = 0;
-
-            ocl_prefix_accumulation.exec(gpu::WorkSize(GROUP_SIZE, n), input_gpu, prefix_sum_accum_gpu, n, cur_pow);
-            
-            cur_pow++;
-            bool f1 = false, f2 = false;
-            uint cur_size = div_ceil(n, 2u);
-            while (cur_size > 0) {
-                if (!f1 && !f2) {
-                    ocl_sum_reduction.exec(gpu::WorkSize(GROUP_SIZE, cur_size), input_gpu, buffer1_pow2_sum_gpu, cur_pow, n);
-                    ocl_prefix_accumulation.exec(gpu::WorkSize(GROUP_SIZE, n), buffer1_pow2_sum_gpu, prefix_sum_accum_gpu, n, cur_pow);
-                    f1 = true;
-                } else if (f1) {
-                    ocl_sum_reduction.exec(gpu::WorkSize(GROUP_SIZE, cur_size), buffer1_pow2_sum_gpu, buffer2_pow2_sum_gpu, cur_pow, n);
-                    ocl_prefix_accumulation.exec(gpu::WorkSize(GROUP_SIZE, n), buffer2_pow2_sum_gpu, prefix_sum_accum_gpu, n, cur_pow);
-                    f1 = false;
-                    f2 = true;
-                } else {
-                    ocl_sum_reduction.exec(gpu::WorkSize(GROUP_SIZE, cur_size), buffer2_pow2_sum_gpu, buffer1_pow2_sum_gpu, cur_pow, n);
-                    ocl_prefix_accumulation.exec(gpu::WorkSize(GROUP_SIZE, n), buffer1_pow2_sum_gpu, prefix_sum_accum_gpu, n, cur_pow);
-                    f2 = false;
-                    f1 = true;
-                }
-                if (cur_size == 1) {
-                    break;
-                }
-
-                cur_pow += NUM_REDUCTIONS_PER_RUN;
-                cur_size = div_ceil(cur_size, ((uint) 1 << NUM_REDUCTIONS_PER_RUN));
-            }
-            
+            prefix_sum_accum_gpu.fill(0);
+            // first
+            ocl_sum_reduction.exec(gpu::WorkSize(GROUP_SIZE, n), input_gpu, prefix_sum_accum_gpu, buffer1_pow2_sum_gpu, 1, n);
+            // spine
+            ocl_sum_reduction.exec(gpu::WorkSize(GROUP_SIZE, n), buffer1_pow2_sum_gpu, buffer2_pow2_sum_gpu, buffer1_pow2_sum_gpu, 1, div_ceil(n, (uint) GROUP_SIZE));
             // ocl_sum_reduction.exec(workSize, input_gpu, buffer1_pow2_sum_gpu, n);
+            ocl_prefix_accumulation.exec(gpu::WorkSize(GROUP_SIZE, n), buffer2_pow2_sum_gpu, prefix_sum_accum_gpu, n, 1);
+
 
             std::vector<unsigned int> gpu_prefix_sum;
             // if (f1) {

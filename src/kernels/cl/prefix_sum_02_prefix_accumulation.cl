@@ -14,55 +14,10 @@ __kernel void prefix_sum_02_prefix_accumulation(
     unsigned int n,
     unsigned int pow2)
 {
-    const uint index = get_global_id(0);
+    uint global_index = get_global_id(0);
+    uint group_index = get_group_id(0);
 
-    for (uint reduction_step_num = 0; reduction_step_num < NUM_REDUCTIONS_PER_RUN; reduction_step_num++) {
-        const uint flag = (uint) 1 << (pow2 + reduction_step_num);
-        // printf("flag=%u\n", flag);
-
-        uint check_index = index + INCLUSIVE;
-        // uint power_index = check_index - (check_index % flag) - 1;
-        uint power_index = check_index >> (pow2 + 1);
-
-        if (index < n && (check_index & flag)) {
-            prefix_sum_accum[index] += pow2_sum[power_index];
-            // if (index == 1023) {
-            //     printf("+ pow2_sum[%u](%u) = %u\n", power_index, pow2_sum[power_index], prefix_sum_accum[index]);
-            // } 
-            // printf("index=%u &flag=%u powe_index=%u\n", index, check_index & flag, power_index);
-        }
-
-        if (pow2 == 0) { // delete when make a special fused kernel for first step!!!
-            break;
-        }
+    if (group_index > 0) {
+        prefix_sum_accum[global_index] += pow2_sum[group_index - 1];
     }
-    
-
-
-
-    // uint sum = 0
-
-    // for (uint flag = 1; flag < n; flag *= 2) {
-    //     if (flag & index) {
-    //         sum += pow2_sum[index - (index % flag)];
-    //     }
-    // }
-
-    // for (uint flag1 = 1, flag2 = -1; flag1 < n; flag1 *= 2, flag2 *= 2) {
-    //     if (flag1 & index) {
-    //         sum += pow2_sum[flag2 & index];
-    //     }
-    // }
-
-
-    // uint sum_index = index;
-    // uint flag = -1;
-    // for (uint pos = 0; pos < 32; pos++) {
-    //     if (sum_index % 2) {
-    //         sum += pow2_sum[(index & flag) - 1];
-    //     }
-    //     flag << = 1;
-    // }
-    
-    // prefix_sum_accum[index] = sum;
 }
