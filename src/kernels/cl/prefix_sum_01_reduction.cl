@@ -15,28 +15,31 @@ __kernel void prefix_sum_01_reduction(
     unsigned int n)
 {
     uint global_index = get_global_id(0);
+    uint local_index = get_local_id(0);
+    uint group_offset = get_group_id(0) * GROUP_SIZE;
+
+    __local uint mem[GROUP_SIZE];
 
     uint sum = 0;
-    uint pow_multiplier = (uint) (1) << current_pow;
-    uint pow_offset = (uint) (1) << (current_pow - 1);
+    uint pow_multiplier = 2;
+    uint pow_offset = 1;
+
+    if (global_index < n) {
+        mem[local_index] = pow2_sum[global_index];
+    } else {
+        mem[local_index] = 0;
+    }
 
     for (uint reduction_step_num = 0; reduction_step_num < NUM_REDUCTIONS_PER_RUN; reduction_step_num++) {
-        if ((global_index + 1) * pow_multiplier - 1 < n) {
-            rassert((global_index + 1) * pow_multiplier - 1 < n, 24572375);
-            rassert((global_index + 1) * pow_multiplier - 1 - pow_offset < n, 4697045978);
-            if (reduction_step_num == 0) {
-                next_pow2_sum[(global_index + 1) * pow_multiplier - 1] = pow2_sum[(global_index + 1) * pow_multiplier - 1] + pow2_sum[(global_index + 1) * pow_multiplier - 1 - pow_offset];
-            } else {
-                next_pow2_sum[(global_index + 1) * pow_multiplier - 1] = next_pow2_sum[(global_index + 1) * pow_multiplier - 1] + next_pow2_sum[(global_index + 1) * pow_multiplier - 1 - pow_offset];
-            }
-        } else {
-            // printf("%u\n", global_index);
+        if (group_offset + (local_index + 1) * pow_multiplier - 1 < n) {
+            mem[(local_index + 1) * pow_multiplier - 1] = mem[(local_index + 1) * pow_multiplier - 1] + mem[(local_index + 1) * pow_multiplier - 1 - pow_offset];
         }
-        
-        // if (global_index == 0) {
-        //     printf("%u %u %u %u\n", (global_index + 1) * pow_multiplier - 1, (global_index + 1) * pow_multiplier - 1 - pow_offset, pow2_sum[(global_index + 1) * pow_multiplier - 1], pow2_sum[(global_index + 1) * pow_multiplier - 1 - pow_offset]);
-        // }
+
         pow_multiplier = pow_multiplier << 1;
         pow_offset = pow_offset << 1;
     }
+
+    next_pow2_sum[global_index] = mem[local_index];
+
+
 }
