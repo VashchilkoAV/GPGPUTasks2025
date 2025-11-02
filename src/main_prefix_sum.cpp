@@ -80,7 +80,7 @@ void run(int argc, char** argv)
             uint cur_size = n;
             while (cur_size > 0) {
                 if (!f1 && !f2) {
-                    ocl_sum_reduction.exec(gpu::WorkSize(GROUP_SIZE, div_ceil(cur_size, 2u)), input_gpu, buffer1_pow2_sum_gpu, 0, n);
+                    ocl_sum_reduction.exec(gpu::WorkSize(GROUP_SIZE, div_ceil(cur_size, 1u)), input_gpu, buffer1_pow2_sum_gpu, 0, n);
                     ocl_prefix_accumulation.exec(gpu::WorkSize(GROUP_SIZE, n), buffer1_pow2_sum_gpu, prefix_sum_accum_gpu, n, cur_pow);
                     f1 = true;
                 } else if (f1) {
