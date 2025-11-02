@@ -56,6 +56,7 @@ __kernel void prefix_sum_02_prefix_accumulation(
         flag <<= 1;
     }
 
+    barrier(CLK_LOCAL_MEM_FENCE);
     if (global_index < n) {
         prefix_sum_accum[global_index] += mem[local_index];
     }
