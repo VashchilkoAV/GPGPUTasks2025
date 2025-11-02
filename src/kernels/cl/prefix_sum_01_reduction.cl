@@ -11,7 +11,7 @@ __kernel void prefix_sum_01_reduction(
     // НЕ ПОДСТРАИВАЙТЕСЬ ПОД СИСТЕМУ! СВЕРНИТЕ С РЕЛЬС!! БУНТ!!! АНТИХАЙП!11!!1
     __global const uint* pow2_sum, // contains n values
     __global       uint* next_pow2_sum, // will contain (n+1)/2 values
-    unsigned int current_pow,
+    unsigned int previous_pow_reduction,
     unsigned int n)
 {
     uint global_index = get_global_id(0);
@@ -22,15 +22,20 @@ __kernel void prefix_sum_01_reduction(
 
     uint sum = 0;
     uint pow_multiplier = 2;
-    uint pow_offset = 1;
+    uint pow_offset = 1 << (previous_pow_reduction);
 
-    if (global_index < n) {
-        mem[local_index] = pow2_sum[global_index];
+    uint pow2_sum_index = (global_index + 1) * pow_offset - 1;
+    if (pow2_sum_index < n) {
+        // printf("%u -- prev[%u]=%u\n", local_index, pow2_sum_index, pow2_sum[pow2_sum_index]);
+        mem[local_index] = pow2_sum[pow2_sum_index];
     } else {
         mem[local_index] = 0;
     }
 
+    pow_offset = 1;
+
     for (uint reduction_step_num = 0; reduction_step_num < NUM_REDUCTIONS_PER_RUN; reduction_step_num++) {
+        barrier(CLK_LOCAL_MEM_FENCE);
         if (group_offset + (local_index + 1) * pow_multiplier - 1 < n) {
             mem[(local_index + 1) * pow_multiplier - 1] = mem[(local_index + 1) * pow_multiplier - 1] + mem[(local_index + 1) * pow_multiplier - 1 - pow_offset];
         }
