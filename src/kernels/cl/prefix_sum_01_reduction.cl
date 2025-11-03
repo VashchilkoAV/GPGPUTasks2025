@@ -36,7 +36,7 @@ __kernel void prefix_sum_01_reduction(
 
     for (uint reduction_step_num = 0; reduction_step_num < NUM_REDUCTIONS_PER_RUN; reduction_step_num++) {
         barrier(CLK_LOCAL_MEM_FENCE);
-        if (group_offset + (local_index + 1) * pow_multiplier - 1 < n) {
+        if ((local_index + 1) * pow_multiplier - 1 < GROUP_SIZE && group_offset + (local_index + 1) * pow_multiplier - 1 < n) {
             mem[(local_index + 1) * pow_multiplier - 1] = mem[(local_index + 1) * pow_multiplier - 1] + mem[(local_index + 1) * pow_multiplier - 1 - pow_offset];
         }
 
