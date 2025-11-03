@@ -84,12 +84,12 @@ void run(int argc, char** argv)
                     ocl_prefix_accumulation.exec(gpu::WorkSize(GROUP_SIZE, n), buffer1_pow2_sum_gpu, prefix_sum_accum_gpu, n, cur_pow);
                     f1 = true;
                 } else if (f1) {
-                    ocl_sum_reduction.exec(gpu::WorkSize(GROUP_SIZE, div_ceil(cur_size, (uint) 1 << NUM_REDUCTIONS_PER_RUN)), buffer1_pow2_sum_gpu, buffer2_pow2_sum_gpu, NUM_REDUCTIONS_PER_RUN, n);
+                    ocl_sum_reduction.exec(gpu::WorkSize(GROUP_SIZE, div_ceil(cur_size, (uint) 1 << (NUM_REDUCTIONS_PER_RUN - 1))), buffer1_pow2_sum_gpu, buffer2_pow2_sum_gpu, NUM_REDUCTIONS_PER_RUN, n); // n???
                     ocl_prefix_accumulation.exec(gpu::WorkSize(GROUP_SIZE, n), buffer2_pow2_sum_gpu, prefix_sum_accum_gpu, n, cur_pow);
                     f1 = false;
                     f2 = true;
                 } else {
-                    ocl_sum_reduction.exec(gpu::WorkSize(GROUP_SIZE, div_ceil(cur_size, (uint) 1 << NUM_REDUCTIONS_PER_RUN)), buffer2_pow2_sum_gpu, buffer1_pow2_sum_gpu, NUM_REDUCTIONS_PER_RUN, n);
+                    ocl_sum_reduction.exec(gpu::WorkSize(GROUP_SIZE, div_ceil(cur_size, (uint) 1 << (NUM_REDUCTIONS_PER_RUN - 1))), buffer2_pow2_sum_gpu, buffer1_pow2_sum_gpu, NUM_REDUCTIONS_PER_RUN, n);
                     ocl_prefix_accumulation.exec(gpu::WorkSize(GROUP_SIZE, n), buffer1_pow2_sum_gpu, prefix_sum_accum_gpu, n, cur_pow);
                     f2 = false;
                     f1 = true;
