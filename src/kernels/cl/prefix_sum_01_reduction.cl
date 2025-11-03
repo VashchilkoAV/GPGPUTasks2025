@@ -45,7 +45,7 @@ __kernel void prefix_sum_01_reduction(
     }
 
     barrier(CLK_LOCAL_MEM_FENCE);
-    next_pow2_sum[global_index] = mem[local_index];
-
-
+    if (global_index < n) {
+        next_pow2_sum[global_index] = mem[local_index];
+    }
 }
