@@ -235,7 +235,7 @@ void debug_io::dumpImage(const std::string &name, const AnyImage &image, bool ve
 		return;
 	}
 
-	if (verbose) { 
+	if (verbose) {
 		std::cout << "saving " << name << ", " << image.width() << " x " << image.height() << ", " << image.channels() << " channels..." << std::endl;
 	}
 
@@ -248,6 +248,8 @@ void debug_io::dumpImage(const std::string &name, const AnyImage &image, bool ve
 		image.savePNG(name);
 	} else if (name_ext == "jpg" || name_ext == "jpeg") {
 		image.saveJPEG(name);
+	} else if (name_ext == "bmp") {
+		image.saveBMP(name);
 	} else {
 		throw std::runtime_error("unsupported image extension '" + name_ext + "' (name: " + name + ")");
 	}
@@ -396,6 +398,7 @@ image8u debug_io::depthMapping(const image32f &depth, float nodata_value, bool f
 	if (min_depth == max_depth) { // protection from zero-division
 		max_depth = min_depth + 1.0f;
 	}
+        std::cerr << "min/max depth: " << min_depth << "/" << max_depth << std::endl;
 
 	point3uc nodata_color = point3uc(0, 255, 0); // green color
 	LOOP_XY(depth) {
