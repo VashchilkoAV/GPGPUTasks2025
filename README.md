@@ -23,8 +23,8 @@
 ## Датасеты
 
  - [data/gnome](data/gnome) - простая модель гнома - 1.297 вершин, 764 треугольника, уже скачано в репозиторий
- - [data/san-miguel](data/san-miguel) - детальная модель местечка расположенного в поместье в Сан-Мигель-де-Альенде, Мексика - 10.614.919 вершин, 12.759.246 треугольников, нужно скачать [с яндекс.диска](https://disk.yandex.ru/d/mIP8q6V9nJiBLw) или [отсюда](https://casual-effects.com/g3d/data10/research/model/San_Miguel/San_Miguel.zip)
- - [data/powerplant](data/powerplant) - детальная модель угольной электростанции - 10.614.919 вершин, 12.759.246 треугольников, нужно скачать [с яндекс.диска](https://disk.yandex.ru/d/u4ORSCvWdITAkw) или [отсюда](https://casual-effects.com/g3d/data10/research/model/powerplant/powerplant.zip)
+ - [data/powerplant](data/powerplant) - детальная модель угольной электростанции - 5.984.083 вершин, 12.759.246 треугольников, нужно скачать [с яндекс.диска](https://disk.yandex.ru/d/u4ORSCvWdITAkw) или [отсюда](https://casual-effects.com/g3d/data10/research/model/powerplant/powerplant.zip)
+ - [data/san-miguel](data/san-miguel) - детальная модель местечка расположенного в поместье в Сан-Мигель-де-Альенде, Мексика - 5.933.233 вершин, 9.980.699 треугольников, нужно скачать [с яндекс.диска](https://disk.yandex.ru/d/mIP8q6V9nJiBLw) или [отсюда](https://casual-effects.com/g3d/data10/research/model/San_Miguel/San_Miguel.zip)
 
 Смотрите какая красота! Это отрисованный frame buffer с ambient occlusion для powerplant:
 
