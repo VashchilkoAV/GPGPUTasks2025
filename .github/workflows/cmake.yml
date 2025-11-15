@@ -63,6 +63,6 @@ jobs:
         ./main_aplusb 1
 
     - name: Run main_linear_bvh
-      working-directory: ${{github.workspace}}/build
+      working-directory: ${{github.workspace}}/
       run: |
         ./main_linear_bvh 0
