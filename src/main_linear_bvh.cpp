@@ -199,8 +199,8 @@ void run(int argc, char** argv)
             rassert(non_empty_brute_force_face_ids > width * height / 10, 2345123412, non_empty_brute_force_face_ids);
             rassert(non_empty_brute_force_ambient_occlusion > width * height / 10, 3423413421, non_empty_brute_force_face_ids);
             timer images_saving_t;
-            debug_io::dumpImage(results_dir + "/framebuffer_face_ids_brute_force.jpg", debug_io::randomMapping(brute_force_framebuffer_face_ids, NO_FACE_ID));
-            debug_io::dumpImage(results_dir + "/framebuffer_ambient_occlusion_brute_force.jpg", debug_io::depthMapping(brute_force_framebuffer_ambient_occlusion));
+            debug_io::dumpImage(results_dir + "/framebuffer_face_ids_brute_force.bmp", debug_io::randomMapping(brute_force_framebuffer_face_ids, NO_FACE_ID));
+            debug_io::dumpImage(results_dir + "/framebuffer_ambient_occlusion_brute_force.bmp", debug_io::depthMapping(brute_force_framebuffer_ambient_occlusion));
             images_saving_time += images_saving_t.elapsed();
         }
 
@@ -271,8 +271,8 @@ void run(int argc, char** argv)
             pcie_reading_time += pcie_reading_t.elapsed();
 
             timer cpu_lbvh_images_saving_t;
-            debug_io::dumpImage(results_dir + "/framebuffer_face_ids_with_cpu_lbvh.jpg", debug_io::randomMapping(cpu_lbvh_framebuffer_face_ids, NO_FACE_ID));
-            debug_io::dumpImage(results_dir + "/framebuffer_ambient_occlusion_with_cpu_lbvh.jpg", debug_io::depthMapping(cpu_lbvh_framebuffer_ambient_occlusion));
+            debug_io::dumpImage(results_dir + "/framebuffer_face_ids_with_cpu_lbvh.bmp", debug_io::randomMapping(cpu_lbvh_framebuffer_face_ids, NO_FACE_ID));
+            debug_io::dumpImage(results_dir + "/framebuffer_ambient_occlusion_with_cpu_lbvh.bmp", debug_io::depthMapping(cpu_lbvh_framebuffer_ambient_occlusion));
             images_saving_time += cpu_lbvh_images_saving_t.elapsed();
             if (has_brute_force) {
                 unsigned int count_ao_errors = countDiffs(brute_force_framebuffer_ambient_occlusion, cpu_lbvh_framebuffer_ambient_occlusion, 0.01f);
@@ -327,8 +327,8 @@ void run(int argc, char** argv)
             pcie_reading_time += pcie_reading_t.elapsed();
 
             timer gpu_lbvh_images_saving_t;
-            debug_io::dumpImage(results_dir + "/framebuffer_face_ids_with_gpu_lbvh.jpg", debug_io::randomMapping(gpu_lbvh_framebuffer_face_ids, NO_FACE_ID));
-            debug_io::dumpImage(results_dir + "/framebuffer_ambient_occlusion_with_gpu_lbvh.jpg", debug_io::depthMapping(gpu_lbvh_framebuffer_ambient_occlusion));
+            debug_io::dumpImage(results_dir + "/framebuffer_face_ids_with_gpu_lbvh.bmp", debug_io::randomMapping(gpu_lbvh_framebuffer_face_ids, NO_FACE_ID));
+            debug_io::dumpImage(results_dir + "/framebuffer_ambient_occlusion_with_gpu_lbvh.bmp", debug_io::depthMapping(gpu_lbvh_framebuffer_ambient_occlusion));
             images_saving_time += gpu_lbvh_images_saving_t.elapsed();
             if (has_brute_force) {
                 unsigned int count_ao_errors = countDiffs(brute_force_framebuffer_ambient_occlusion, gpu_lbvh_framebuffer_ambient_occlusion, 0.01f);
