@@ -89,9 +89,8 @@ void run(int argc, char** argv)
     };
 
     const int niters = 10; // при отладке удобно запускать одну итерацию
-    std::vector<double> gpu_lbvh_timings;
-    std::vector<double> gpu_rt_timings;
-    std::vector<double> gpu_rt_timings_with_gpu_lbvh;
+    std::vector<double> gpu_rt_perf_mrays_per_sec;
+    std::vector<double> gpu_lbvh_perfs_mtris_per_sec;
 
     std::cout << "Using " << AO_SAMPLES << " ray samples for ambient occlusion" << std::endl;
     for (std::string scene_path: scenes) {
@@ -212,7 +211,9 @@ void run(int argc, char** argv)
             timer cpu_lbvh_t;
             buildLBVH_CPU(scene.vertices, scene.faces, lbvh_nodes_cpu, leaf_faces_indices_cpu);
             cpu_lbvh_time = cpu_lbvh_t.elapsed();
+            double build_mtris_per_sec = nfaces * 1e-6f / cpu_lbvh_time;
             std::cout << "CPU build LBVH in " << cpu_lbvh_time << " sec" << std::endl;
+            std::cout << "CPU LBVH build performance: " << build_mtris_per_sec << " MTris/s" << std::endl;
 
             gpu::shared_device_buffer_typed<BVHNodeGPU> lbvh_nodes_gpu(lbvh_nodes_cpu.size());
             gpu::gpu_mem_32u leaf_faces_indices_gpu(leaf_faces_indices_cpu.size());
@@ -259,9 +260,11 @@ void run(int argc, char** argv)
 
                 rt_times_with_cpu_lbvh.push_back(t.elapsed());
             }
-            gpu_rt_timings.push_back(stats::median(rt_times_with_cpu_lbvh));
             rt_times_with_cpu_lbvh_sum = stats::sum(rt_times_with_cpu_lbvh);
+            double mrays_per_sec = width * height * AO_SAMPLES * 1e-6f / stats::median(rt_times_with_cpu_lbvh);
             std::cout << "GPU with CPU LBVH ray tracing frame render times (in seconds) - " << stats::valuesStatsLine(rt_times_with_cpu_lbvh) << std::endl;
+            std::cout << "GPU with CPU LBVH ray tracing performance: " << mrays_per_sec << " MRays/s" << std::endl;
+            gpu_rt_perf_mrays_per_sec.push_back(mrays_per_sec);
 
             timer pcie_reading_t;
             image32i cpu_lbvh_framebuffer_face_ids(width, height, 1);
@@ -299,8 +302,10 @@ void run(int argc, char** argv)
                 gpu_lbvh_times.push_back(t.elapsed());
             }
             gpu_lbvh_time_sum = stats::sum(gpu_lbvh_times);
+            double build_mtris_per_sec = nfaces * 1e-6f / stats::median(gpu_lbvh_times);
             std::cout << "GPU LBVH build times (in seconds) - " << stats::valuesStatsLine(gpu_lbvh_times) << std::endl;
-            gpu_lbvh_timings.push_back(stats::median(gpu_lbvh_times));
+            std::cout << "GPU LBVH build performance: " << build_mtris_per_sec << " MTris/s" << std::endl;
+            gpu_lbvh_perfs_mtris_per_sec.push_back(build_mtris_per_sec);
 
             timer cleaning_framebuffers_t;
             framebuffer_face_id_gpu.fill(NO_FACE_ID);
@@ -316,8 +321,10 @@ void run(int argc, char** argv)
                 gpu_lbvh_rt_times.push_back(t.elapsed());
             }
             rt_times_with_gpu_lbvh_sum = stats::sum(gpu_lbvh_rt_times);
+            double mrays_per_sec = width * height * AO_SAMPLES * 1e-6f / stats::median(gpu_lbvh_rt_times);
             std::cout << "GPU with GPU LBVH ray tracing frame render times (in seconds) - " << stats::valuesStatsLine(gpu_lbvh_rt_times) << std::endl;
-            gpu_rt_timings_with_gpu_lbvh.push_back(stats::median(gpu_lbvh_rt_times));
+            std::cout << "GPU with GPU LBVH ray tracing performance: " << mrays_per_sec << " MRays/s" << std::endl;
+            gpu_rt_perf_mrays_per_sec.push_back(mrays_per_sec);
 
             timer pcie_reading_t;
             image32i gpu_lbvh_framebuffer_face_ids(width, height, 1);
@@ -356,10 +363,12 @@ void run(int argc, char** argv)
     }
 
     std::cout << "____________________________________________________________________________________________" << std::endl;
-    std::cout << "Total GPU RT with CPU LBVH timings: " << stats::sum(gpu_rt_timings) << " sec" << std::endl;
-    std::cout << "Total building    GPU LBVH timings: " << stats::sum(gpu_lbvh_timings) << " sec" << std::endl;
-    std::cout << "Total GPU RT with GPU LBVH timings: " << stats::sum(gpu_rt_timings_with_gpu_lbvh) << " sec" << std::endl;
-    if (gpu_rt_timings.size() != 3 || gpu_lbvh_timings.size() != 3 || gpu_rt_timings_with_gpu_lbvh.size() != 3) {
+    double avg_gpu_rt_perf = stats::avg(gpu_rt_perf_mrays_per_sec);
+    double avg_lbvh_build_perf = stats::avg(gpu_lbvh_perfs_mtris_per_sec);
+    std::cout << "Total GPU RT with  LBVH avg perf: " << avg_gpu_rt_perf << " MRays/sec (all " << stats::vectorToString(gpu_rt_perf_mrays_per_sec) << ")" << std::endl;
+    std::cout << "Total building GPU LBVH avg perf: " << avg_lbvh_build_perf << " MTris/sec (all " << stats::vectorToString(gpu_lbvh_perfs_mtris_per_sec) << ")" << std::endl;
+    std::cout << "Final score: " << avg_gpu_rt_perf * avg_lbvh_build_perf << " coolness" << std::endl;
+    if (gpu_rt_perf_mrays_per_sec.size() != 6 || gpu_lbvh_perfs_mtris_per_sec.size() != 3) {
         std::cout << "Results are incomplete!" << std::endl;
     }
 }
