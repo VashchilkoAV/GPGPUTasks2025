@@ -26,10 +26,9 @@ static inline void make_primary_ray(__global const CameraViewGPU* cam,
     const float z_cam = -1.0f;                        // look along -Z
 
     // 3) dir_world = R^T * dir_cam  (R is row-major 3x3)
-    const float* R = cam->E.R;
-    const float dx = R[0] * x_cam + R[3] * y_cam + R[6] * z_cam;
-    const float dy = R[1] * x_cam + R[4] * y_cam + R[7] * z_cam;
-    const float dz = R[2] * x_cam + R[5] * y_cam + R[8] * z_cam;
+    const float dx = cam->E.R[0] * x_cam + cam->E.R[3] * y_cam + cam->E.R[6] * z_cam;
+    const float dy = cam->E.R[1] * x_cam + cam->E.R[4] * y_cam + cam->E.R[7] * z_cam;
+    const float dz = cam->E.R[2] * x_cam + cam->E.R[5] * y_cam + cam->E.R[8] * z_cam;
 
     // 4) origin = camera center in world; direction normalized
     *ray_o = (float3)(cam->E.C[0], cam->E.C[1], cam->E.C[2]);
