@@ -398,7 +398,6 @@ image8u debug_io::depthMapping(const image32f &depth, float nodata_value, bool f
 	if (min_depth == max_depth) { // protection from zero-division
 		max_depth = min_depth + 1.0f;
 	}
-        std::cerr << "min/max depth: " << min_depth << "/" << max_depth << std::endl;
 
 	point3uc nodata_color = point3uc(0, 255, 0); // green color
 	LOOP_XY(depth) {
