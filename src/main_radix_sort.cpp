@@ -86,10 +86,13 @@ void run(int argc, char** argv)
         std::cout << "CPU std::sort effective RAM bandwidth: " << memory_size_gb / t.elapsed() << " GB/s (" << n / 1000 / 1000 / t.elapsed() << " uint millions/s)" << std::endl;
     }
 
+    const uint global_reduction_task_size = DIV_CEIL(n, GROUP_SIZE);
+
+
     // Аллоцируем буферы в VRAM
     gpu::gpu_mem_32u input_gpu(n);
     gpu::gpu_mem_32u tmp_input_gpu(n);
-    gpu::gpu_mem_32u buffer1_gpu(n), buffer2_gpu(n), buffer3_gpu(n), buffer4_gpu(n); // TODO это просто шаблонка, можете переименовать эти буферы, сделать другого размера/типа, удалить часть, добавить новые
+    gpu::gpu_mem_32u buffer1_gpu(n), buffer2_gpu(global_reduction_task_size), buffer3_gpu(global_reduction_task_size), buffer4_gpu(global_reduction_task_size), buffer5_gpu(global_reduction_task_size); // TODO это просто шаблонка, можете переименовать эти буферы, сделать другого размера/типа, удалить часть, добавить новые
     gpu::gpu_mem_32u buffer_output_gpu(n);
 
     gpu::gpu_mem_32u tmp(n);
@@ -118,28 +121,30 @@ void run(int argc, char** argv)
         if (context.type() == gpu::Context::TypeOpenCL) {
             for (unsigned int bit_offset = 0; bit_offset < 32; bit_offset += BIT_PER_RUN) {
                 ocl_fillBufferWithZeros.exec(workSize, buffer1_gpu, n);
-                ocl_fillBufferWithZeros.exec(workSize, buffer2_gpu, n);
-                ocl_fillBufferWithZeros.exec(workSize, buffer3_gpu, n);
-                ocl_fillBufferWithZeros.exec(workSize, buffer4_gpu, n);
+                ocl_fillBufferWithZeros.exec(workSize, buffer2_gpu, global_reduction_task_size);
+                ocl_fillBufferWithZeros.exec(workSize, buffer3_gpu, global_reduction_task_size);
+                ocl_fillBufferWithZeros.exec(workSize, buffer4_gpu, global_reduction_task_size);
+                ocl_fillBufferWithZeros.exec(workSize, buffer5_gpu, global_reduction_task_size);
+
                 
-                ocl_radixSort01LocalCounting.exec(workSize, tmp_input_gpu, buffer1_gpu, bit_offset, n); //map
+                ocl_radixSort01LocalCounting.exec(workSize, tmp_input_gpu, buffer1_gpu, buffer2_gpu, bit_offset, n); //map
                 
                 uint cur_pow = 0;
                 bool f1 = false, f2 = false;
-                uint cur_size = n;
+                uint cur_size = global_reduction_task_size;
                 while (cur_size > 0) {
                     if (!f1 && !f2) {
-                        ocl_radixSort02GlobalPrefixesScanSumReduction.exec(gpu::WorkSize(GROUP_SIZE, div_ceil(cur_size, 1u)), buffer1_gpu, buffer2_gpu, 0, n);
-                        ocl_radixSort03GlobalPrefixesScanAccumulation.exec(gpu::WorkSize(GROUP_SIZE, n), buffer2_gpu, buffer4_gpu, n, cur_pow);
+                        ocl_radixSort02GlobalPrefixesScanSumReduction.exec(gpu::WorkSize(GROUP_SIZE, div_ceil(cur_size, 1u)), buffer2_gpu, buffer3_gpu, 0, global_reduction_task_size);
+                        ocl_radixSort03GlobalPrefixesScanAccumulation.exec(gpu::WorkSize(GROUP_SIZE, global_reduction_task_size), buffer3_gpu, buffer5_gpu, global_reduction_task_size, cur_pow);
                         f1 = true;
                     } else if (f1) {
-                        ocl_radixSort02GlobalPrefixesScanSumReduction.exec(gpu::WorkSize(GROUP_SIZE, div_ceil(cur_size, (uint) 1)), buffer2_gpu, buffer3_gpu, NUM_REDUCTIONS_PER_RUN, n); // n???
-                        ocl_radixSort03GlobalPrefixesScanAccumulation.exec(gpu::WorkSize(GROUP_SIZE, n), buffer3_gpu, buffer4_gpu, n, cur_pow);
+                        ocl_radixSort02GlobalPrefixesScanSumReduction.exec(gpu::WorkSize(GROUP_SIZE, div_ceil(cur_size, (uint) 1)), buffer3_gpu, buffer4_gpu, NUM_REDUCTIONS_PER_RUN, global_reduction_task_size); // n???
+                        ocl_radixSort03GlobalPrefixesScanAccumulation.exec(gpu::WorkSize(GROUP_SIZE, global_reduction_task_size), buffer4_gpu, buffer5_gpu, global_reduction_task_size, cur_pow);
                         f1 = false;
                         f2 = true;
                     } else {
-                        ocl_radixSort02GlobalPrefixesScanSumReduction.exec(gpu::WorkSize(GROUP_SIZE, div_ceil(cur_size, (uint) 1)), buffer3_gpu, buffer2_gpu, NUM_REDUCTIONS_PER_RUN, n);
-                        ocl_radixSort03GlobalPrefixesScanAccumulation.exec(gpu::WorkSize(GROUP_SIZE, n), buffer2_gpu, buffer4_gpu, n, cur_pow);
+                        ocl_radixSort02GlobalPrefixesScanSumReduction.exec(gpu::WorkSize(GROUP_SIZE, div_ceil(cur_size, (uint) 1)), buffer4_gpu, buffer3_gpu, NUM_REDUCTIONS_PER_RUN, global_reduction_task_size);
+                        ocl_radixSort03GlobalPrefixesScanAccumulation.exec(gpu::WorkSize(GROUP_SIZE, global_reduction_task_size), buffer3_gpu, buffer5_gpu, global_reduction_task_size, cur_pow);
                         f2 = false;
                         f1 = true;
                     }
@@ -151,7 +156,7 @@ void run(int argc, char** argv)
                     cur_size = div_ceil(cur_size, ((uint) 1 << NUM_REDUCTIONS_PER_RUN));
                 }
                 
-                ocl_radixSort04Scatter.exec(workSize, tmp_input_gpu, buffer4_gpu, buffer_output_gpu, bit_offset, n, tmp);
+                ocl_radixSort04Scatter.exec(workSize, tmp_input_gpu, buffer1_gpu, buffer5_gpu, buffer_output_gpu, bit_offset, n, tmp);
                 
                 //copy from output to input
                 ocl_radixSort05Copy.exec(workSize, buffer_output_gpu, tmp_input_gpu, n);

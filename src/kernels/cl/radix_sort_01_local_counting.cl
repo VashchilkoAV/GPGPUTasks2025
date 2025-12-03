@@ -21,24 +21,31 @@ __kernel void radix_sort_01_local_counting(
 
     
     const uint flag = ((1 << BIT_PER_RUN) - 1) << a1;
-
+    uint sum = 69761289000;
+    
     __local uint mem[GROUP_SIZE];
 
-    mem[local_id] = (buffer1[global_id] & flag) ? 0 : 1;
+    if (global_id < a2) {
+        mem[local_id] = (buffer1[global_id] & flag) ? 0 : 1;
+    } else {
+        mem[local_id] = 0;
+    }
 
     for (uint pow = 2; pow < GROUP_SIZE + 1; pow <<= 1) {
         barrier(CLK_LOCAL_MEM_FENCE);
         uint result_index = (local_id + 1) * pow - 1;
         uint summed_index = (local_id + 1) * pow - (pow >> 1) - 1;
         if (result_index < GROUP_SIZE) {
-            // printf("%u %u\n", result_index, summed_index);
             mem[result_index] += mem[summed_index];
         }
     }
     
     barrier(CLK_LOCAL_MEM_FENCE);
-    const uint sum = mem[GROUP_SIZE - 1];
-    mem[GROUP_SIZE - 1] = 0;
+
+    if (local_id == 0) {
+        sum = mem[GROUP_SIZE - 1];
+        mem[GROUP_SIZE - 1] = 0;
+    }
 
     uint offset = GROUP_SIZE;
     for (uint d = 1; d < GROUP_SIZE; d *= 2) {
@@ -61,7 +68,4 @@ __kernel void radix_sort_01_local_counting(
     if (local_id == 0) {
         buffer3[group_id] = sum;
     }
-    // if (local_index == 0) {
-    //     block_sum[group_index] = mem[GROUP_SIZE - 1] + mem2[GROUP_SIZE - 1];
-    // }
 }

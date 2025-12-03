@@ -11,6 +11,8 @@
 #define NUM_REDUCTIONS_PER_RUN 6
 #define INCLUSIVE 0
 
+#define DIV_CEIL(x,y) (((x) + (y) - 1) / (y))
+
 #define RASSERT_ENABLED 0 // disabled by default, enable for debug by changing 0 to 1, disable before performance evaluation/profiling/commiting
 
 #endif // pragma once
