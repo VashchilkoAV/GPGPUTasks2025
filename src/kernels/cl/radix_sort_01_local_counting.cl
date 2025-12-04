@@ -21,7 +21,7 @@ __kernel void radix_sort_01_local_counting(
 
     
     const uint flag = ((1 << BIT_PER_RUN) - 1) << a1;
-    uint sum = 69761289000;
+    __local uint sum;// = 69761289000;
     
     __local uint mem[GROUP_SIZE];
 
