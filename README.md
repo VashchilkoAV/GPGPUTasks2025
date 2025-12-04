@@ -23,3 +23,7 @@
 - [Записи лекций](https://www.youtube.com/watch?v=H0NVZ8k3wno&list=PLBD2NlYIwZ2d9Vii8OEKOJqdm74zOXZEY)
 - [Слайды](https://github.com/GPGPUCourse/GPGPUTasks2025/tree/main/slides)
 - [Билеты к экзамену](https://github.com/GPGPUCourse/GPGPUTasks2025/blob/main/%D0%AD%D0%BA%D0%B7%D0%B0%D0%BC%D0%B5%D0%BD%20%D0%BF%D0%BE%20GPGPU%202025%2C%20CS%20Space.pdf)
+
+<p align="center">
+  <img width="400" src="https://github.com/user-attachments/assets/f0d8574a-cecc-4477-9be8-a65c6bcf5ecf">
+</p>
