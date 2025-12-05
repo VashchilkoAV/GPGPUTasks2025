@@ -21,13 +21,15 @@ __kernel void radix_sort_01_local_counting(
 
     
     const uint flag = ((1 << BIT_PER_RUN) - 1) << a1;
+    uint local_bucket = 0;
     __local uint sum[NUM_BUCKETS];// = 69761289000;
     
     __local uint mem[NUM_BUCKETS][GROUP_SIZE];
 
     for (uint bucket = 0; bucket < NUM_BUCKETS; bucket++) {
         if (global_id < a2) {
-            mem[bucket][local_id] = ((buffer1[global_id] & flag) == bucket) ? 1 : 0;
+            local_bucket = (buffer1[global_id] & flag) >> a1;
+            mem[bucket][local_id] = (local_bucket == bucket) ? 1 : 0;
         } else {
             mem[bucket][local_id] = 0;
         }
@@ -72,7 +74,11 @@ __kernel void radix_sort_01_local_counting(
     barrier(CLK_LOCAL_MEM_FENCE);
     if (global_id < a2) {
         for (uint bucket = 0; bucket < NUM_BUCKETS; bucket++) {
-            buffer2[a2 * bucket + global_id] = mem[bucket][local_id];
+            // buffer2[a2 * bucket + global_id] = mem[bucket][local_id]; // old
+            
+            // buffer2[global_id] += (bucket < local_bucket ? sum[bucket] : 0); // newer
+            // buffer2[global_id] += (bucket == local_bucket ? mem[bucket][local_id] : 0);
+            buffer2[global_id] += (bucket == local_bucket ? mem[bucket][local_id] : 0);
         }
     }
     if (local_id == 0) {
