@@ -113,7 +113,7 @@ void run(int argc, char** argv)
 
     // Запускаем кернел (несколько раз и с замером времени выполнения)
     std::vector<double> times;
-    for (int iter = 0; iter < 1; ++iter) { // TODO при отладке запускайте одну итерацию
+    for (int iter = 0; iter < 10; ++iter) { // TODO при отладке запускайте одну итерацию
         timer t;
         ocl_radixSort05Copy.exec(workSize, input_gpu, tmp_input_gpu, n);
         // Запускаем кернел, с указанием размера рабочего пространства и передачей всех аргументов
