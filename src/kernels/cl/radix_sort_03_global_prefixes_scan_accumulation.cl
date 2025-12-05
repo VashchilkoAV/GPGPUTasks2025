@@ -32,7 +32,7 @@ __kernel void radix_sort_03_global_prefixes_scan_accumulation(
 
     for (uint bucket = 0; bucket < NUM_BUCKETS; bucket++) {
         mem[bucket][local_index] = 0;
-        mem_add[bucket][local_index] = pow2_sum[pow2_sum_index_offset + local_index];
+        mem_add[bucket][local_index] = pow2_sum[n * bucket + pow2_sum_index_offset + local_index];
     }
     // printf("%u\n", pow2_sum[pow2_sum_index_offset + local_index]);
 
