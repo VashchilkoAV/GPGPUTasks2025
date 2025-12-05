@@ -15,7 +15,8 @@ __kernel void radix_sort_04_scatter(
     __global       uint* buffer4,
     unsigned int a1,
     unsigned int a2,
-    __global       uint* buffer5)
+    __global       uint* buffer5,
+    __global const uint* buffer6)
 {
     const uint global_id = get_global_id(0);
     const uint group_id = get_group_id(0);
@@ -24,16 +25,15 @@ __kernel void radix_sort_04_scatter(
     }
 
     const uint flag = ((1 << BIT_PER_RUN) - 1) << a1; // ((1 << (BIT_PER_RUN + 1)) - 1) -- row of ones with length=BIT_PER_RUN
-    const uint last_flag = buffer1[a2 - 1] & flag ? 0 : 1;
-    const uint last_element_sum = buffer3[DIV_CEIL(a2, GROUP_SIZE) - 1] + buffer2[a2 - 1];
-
-
-    const uint result_index_regular = buffer3[group_id] + buffer2[global_id];
-    const uint result_index_irregular = global_id - result_index_regular + last_element_sum + last_flag;
-    
-    const uint result_index = (buffer1[global_id] & flag) ? result_index_irregular : result_index_regular; 
-
-    
+    const uint group_offset = DIV_CEIL(a2, GROUP_SIZE);
+    const uint bucket = (buffer1[global_id] & flag) >> a1;
+    uint result_index = 0;
+    for (uint seq = 0; seq < bucket; seq++) {
+        // result_index += buffer3[group_offset - 1 + seq * group_offset]; // + counter[group_offset - 1 + seq * group_offset]
+        result_index += buffer3[group_offset - 1 + seq * group_offset] + buffer6[group_offset - 1 + seq * group_offset];
+    }
+    result_index += buffer3[group_offset * bucket + group_id];
+    result_index += buffer2[global_id];
 
     buffer4[result_index] = buffer1[global_id];
     

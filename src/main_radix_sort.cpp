@@ -121,10 +121,10 @@ void run(int argc, char** argv)
         if (context.type() == gpu::Context::TypeOpenCL) {
             for (unsigned int bit_offset = 0; bit_offset < 32; bit_offset += BIT_PER_RUN) {
                 ocl_fillBufferWithZeros.exec(workSize, buffer1_gpu, n);
-                ocl_fillBufferWithZeros.exec(workSize, buffer2_gpu, global_reduction_task_size);
-                ocl_fillBufferWithZeros.exec(workSize, buffer3_gpu, global_reduction_task_size);
-                ocl_fillBufferWithZeros.exec(workSize, buffer4_gpu, global_reduction_task_size);
-                ocl_fillBufferWithZeros.exec(workSize, buffer5_gpu, global_reduction_task_size);
+                ocl_fillBufferWithZeros.exec(workSize, buffer2_gpu, global_reduction_task_size * NUM_BUCKETS);
+                ocl_fillBufferWithZeros.exec(workSize, buffer3_gpu, global_reduction_task_size * NUM_BUCKETS);
+                ocl_fillBufferWithZeros.exec(workSize, buffer4_gpu, global_reduction_task_size * NUM_BUCKETS);
+                ocl_fillBufferWithZeros.exec(workSize, buffer5_gpu, global_reduction_task_size * NUM_BUCKETS);
 
                 
                 ocl_radixSort01LocalCounting.exec(workSize, tmp_input_gpu, buffer1_gpu, buffer2_gpu, bit_offset, n); //map
@@ -156,7 +156,7 @@ void run(int argc, char** argv)
                     cur_size = div_ceil(cur_size, ((uint) 1 << NUM_REDUCTIONS_PER_RUN));
                 }
                 
-                ocl_radixSort04Scatter.exec(workSize, tmp_input_gpu, buffer1_gpu, buffer5_gpu, buffer_output_gpu, bit_offset, n, tmp);
+                ocl_radixSort04Scatter.exec(workSize, tmp_input_gpu, buffer1_gpu, buffer5_gpu, buffer_output_gpu, bit_offset, n, tmp, buffer2_gpu);
                 
                 //copy from output to input
                 ocl_radixSort05Copy.exec(workSize, buffer_output_gpu, tmp_input_gpu, n);

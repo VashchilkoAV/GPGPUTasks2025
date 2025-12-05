@@ -5,8 +5,8 @@
 #define GROUP_SIZE_X 16
 #define GROUP_SIZE_Y 16
 
-#define BIT_PER_RUN 1
-#define NUM_BUCKETS (1u << ((BIT_PER_RUN - 1)))
+#define BIT_PER_RUN 4
+#define NUM_BUCKETS (1u << (BIT_PER_RUN))
 #define ELEMENTS_PER_WORK_ITEM 1
 
 #define NUM_REDUCTIONS_PER_RUN 6
