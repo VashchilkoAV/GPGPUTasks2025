@@ -21,30 +21,36 @@ __kernel void radix_sort_01_local_counting(
 
     
     const uint flag = ((1 << BIT_PER_RUN) - 1) << a1;
-    __local uint sum;// = 69761289000;
+    __local uint sum[NUM_BUCKETS];// = 69761289000;
     
-    __local uint mem[GROUP_SIZE];
+    __local uint mem[NUM_BUCKETS][GROUP_SIZE];
 
-    if (global_id < a2) {
-        mem[local_id] = (buffer1[global_id] & flag) ? 0 : 1;
-    } else {
-        mem[local_id] = 0;
+    for (uint bucket = 0; bucket < NUM_BUCKETS; bucket++) {
+        if (global_id < a2) {
+            mem[bucket][local_id] = ((buffer1[global_id] & flag) == bucket) ? 1 : 0;
+        } else {
+            mem[bucket][local_id] = 0;
+        }
     }
-
+    
     for (uint pow = 2; pow < GROUP_SIZE + 1; pow <<= 1) {
         barrier(CLK_LOCAL_MEM_FENCE);
-        uint result_index = (local_id + 1) * pow - 1;
-        uint summed_index = (local_id + 1) * pow - (pow >> 1) - 1;
-        if (result_index < GROUP_SIZE) {
-            mem[result_index] += mem[summed_index];
+        for (uint bucket = 0; bucket < NUM_BUCKETS; bucket++) {
+            uint result_index = (local_id + 1) * pow - 1;
+            uint summed_index = (local_id + 1) * pow - (pow >> 1) - 1;
+            if (result_index < GROUP_SIZE) {
+                mem[bucket][result_index] += mem[bucket][summed_index];
+            }
         }
     }
     
     barrier(CLK_LOCAL_MEM_FENCE);
 
     if (local_id == 0) {
-        sum = mem[GROUP_SIZE - 1];
-        mem[GROUP_SIZE - 1] = 0;
+        for (uint bucket = 0; bucket < NUM_BUCKETS; bucket++) {
+            sum[bucket] = mem[bucket][GROUP_SIZE - 1];
+            mem[bucket][GROUP_SIZE - 1] = 0; // set previous bucket sum
+        }
     }
 
     uint offset = GROUP_SIZE;
@@ -53,19 +59,25 @@ __kernel void radix_sort_01_local_counting(
         offset >>= 1;
         barrier(CLK_LOCAL_MEM_FENCE);
         if (local_id < d) {
-            int ai = offset * (2 * local_id + 1) - 1;
-            int bi = offset * (2 * local_id + 2) - 1;
-            uint t = mem[ai];
-            mem[ai] = mem[bi];
-            mem[bi] += t;
+            for (uint bucket = 0; bucket < NUM_BUCKETS; bucket++) {
+                int ai = offset * (2 * local_id + 1) - 1;
+                int bi = offset * (2 * local_id + 2) - 1;
+                uint t = mem[bucket][ai];
+                mem[bucket][ai] = mem[bucket][bi];
+                mem[bucket][bi] += t;
+            }
         }
     }
 
     barrier(CLK_LOCAL_MEM_FENCE);
     if (global_id < a2) {
-        buffer2[global_id] = mem[local_id];
+        for (uint bucket = 0; bucket < NUM_BUCKETS; bucket++) {
+            buffer2[a2 * bucket + global_id] = mem[bucket][local_id];
+        }
     }
     if (local_id == 0) {
-        buffer3[group_id] = sum;
+        for (uint bucket = 0; bucket < NUM_BUCKETS; bucket++) {
+            buffer3[DIV_CEIL(a2, GROUP_SIZE) * bucket + group_id] = sum[bucket];
+        }
     }
 }
