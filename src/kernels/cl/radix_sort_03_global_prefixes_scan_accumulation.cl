@@ -21,8 +21,8 @@ __kernel void radix_sort_03_global_prefixes_scan_accumulation(
     uint global_index_corrected = check_index >> pow2;
 
 
-    __local uint mem[GROUP_SIZE];
-    __local uint mem_add[GROUP_SIZE];
+    __local uint mem[NUM_BUCKETS][GROUP_SIZE];
+    __local uint mem_add[NUM_BUCKETS][GROUP_SIZE];
 
     // if (global_index < n) {
     //     mem[local_index] = prefix_sum_accum[global_index];
@@ -30,9 +30,10 @@ __kernel void radix_sort_03_global_prefixes_scan_accumulation(
     //     mem[local_index] = 0;
     // }
 
-    mem[local_index] = 0;
-
-    mem_add[local_index] = pow2_sum[pow2_sum_index_offset + local_index];
+    for (uint bucket = 0; bucket < NUM_BUCKETS; bucket++) {
+        mem[bucket][local_index] = 0;
+        mem_add[bucket][local_index] = pow2_sum[pow2_sum_index_offset + local_index];
+    }
     // printf("%u\n", pow2_sum[pow2_sum_index_offset + local_index]);
 
     uint num_reduction_steps = NUM_REDUCTIONS_PER_RUN;
@@ -49,14 +50,18 @@ __kernel void radix_sort_03_global_prefixes_scan_accumulation(
             uint add_index = (global_index_corrected - (global_index_corrected % flag) - 1) % GROUP_SIZE;
             // if (local_index == 2)
             // printf("step=%u, local_index=%u, global_corr=%u, flag=%u, add_index=%u\n", reduction_step_num, local_index, global_index_corrected, flag, add_index);
-            mem[local_index] += mem_add[add_index];
+            for (uint bucket = 0; bucket < NUM_BUCKETS; bucket++) {
+                mem[bucket][local_index] += mem_add[bucket][add_index];
+            }
         }
         flag <<= 1;
     }
 
     barrier(CLK_LOCAL_MEM_FENCE);
     if (global_index < n) {
-        prefix_sum_accum[global_index] += mem[local_index];
+        for (uint bucket = 0; bucket < NUM_BUCKETS; bucket++) {
+            prefix_sum_accum[n * bucket + global_index] += mem[bucket][local_index];
+        }
     }
 
 }
