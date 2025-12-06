@@ -92,7 +92,7 @@ void run(int argc, char** argv)
     // Аллоцируем буферы в VRAM
     gpu::gpu_mem_32u input_gpu(n);
     gpu::gpu_mem_32u tmp_input_gpu(n);
-    gpu::gpu_mem_32u buffer1_gpu(n), buffer2_gpu(global_reduction_task_size), buffer3_gpu(global_reduction_task_size), buffer4_gpu(global_reduction_task_size), buffer5_gpu(global_reduction_task_size); // TODO это просто шаблонка, можете переименовать эти буферы, сделать другого размера/типа, удалить часть, добавить новые
+    gpu::gpu_mem_32u buffer1_gpu(n), buffer2_gpu(global_reduction_task_size * NUM_BUCKETS), buffer3_gpu(global_reduction_task_size * NUM_BUCKETS), buffer4_gpu(global_reduction_task_size * NUM_BUCKETS), buffer5_gpu(global_reduction_task_size * NUM_BUCKETS); // TODO это просто шаблонка, можете переименовать эти буферы, сделать другого размера/типа, удалить часть, добавить новые
     gpu::gpu_mem_32u buffer_output_gpu(n);
 
     gpu::gpu_mem_32u tmp(n);
