@@ -92,14 +92,41 @@ void run(int argc, char** argv)
 
     // Запускаем кернел (несколько раз и с замером времени выполнения)
     std::vector<double> times;
+    gpu::WorkSize workSize(GROUP_SIZE, n);
+
+    std::vector<unsigned int> gpu_sorted;
+
+    bool f1 = false, f2 = false;
+
+    
     for (int iter = 0; iter < 10; ++iter) { // TODO при отладке запускайте одну итерацию
         timer t;
 
         // Запускаем кернел, с указанием размера рабочего пространства и передачей всех аргументов
         // Если хотите - можете удалить ветвление здесь и оставить только тот код который соответствует вашему выбору API
         if (context.type() == gpu::Context::TypeOpenCL) {
-            // TODO
-            throw std::runtime_error(CODE_IS_NOT_IMPLEMENTED);
+            for (unsigned int subarray_length = 1; subarray_length < n; subarray_length *= 2) {
+                if (!f1 && !f2) {
+                    ocl_mergeSort.exec(workSize, input_gpu, buffer1_gpu, subarray_length, n);
+                    f1 = true;
+                    // ahahah = buffer1_gpu.readVector();
+                    // std::cout << "buff1 " << ahahah << "\n";
+                } else if (f1) {
+                    ocl_mergeSort.exec(workSize, buffer1_gpu, buffer2_gpu, subarray_length, n);
+                    f1 = false;
+                    f2 = true;
+                    // ahahah = buffer2_gpu.readVector();
+                    // std::cout << "buff2 " << ahahah << "\n";
+                } else {
+                    ocl_mergeSort.exec(workSize, buffer2_gpu, buffer1_gpu, subarray_length, n);
+                    f2 = false;
+                    f1 = true;
+                    // ahahah = buffer1_gpu.readVector();
+                    // std::cout << "buff1 "<< ahahah << "\n";
+                }
+
+            }
+
         } else if (context.type() == gpu::Context::TypeCUDA) {
             // TODO
             throw std::runtime_error(CODE_IS_NOT_IMPLEMENTED);
@@ -119,7 +146,12 @@ void run(int argc, char** argv)
     std::cout << "GPU merge-sort median effective VRAM bandwidth: " << memory_size_gb / stats::median(times) << " GB/s (" << n / 1000 / 1000 / stats::median(times) << " uint millions/s)" << std::endl;
 
     // Считываем результат по PCI-E шине: GPU VRAM -> CPU RAM
-    std::vector<unsigned int> gpu_sorted = buffer_output_gpu.readVector();
+    // std::vector<unsigned int> gpu_sorted = buffer_output_gpu.readVector();
+    if (f1) {
+        gpu_sorted = buffer1_gpu.readVector();
+    } else {
+        gpu_sorted = buffer2_gpu.readVector();
+    }
 
     // Сверяем результат
     for (size_t i = 0; i < n; ++i) {
