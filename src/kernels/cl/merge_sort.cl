@@ -29,23 +29,33 @@ __kernel void merge_sort(
 
     // printf("%u %u %u %u %u\n", global_id, num_comparison_pair, num_subarray_in_pair, num_element_in_subarray, start_index);
 
-    int l = -1, r = sorted_k;
-    for (uint j = 0; j < sorted_k; j++) {
-        uint m = (l + r) / 2;
-        uint delim_value = start_index + m < n ? input_data[start_index + m] : INT_MAX;
-        if (num_subarray_in_pair == 0) {
-            if (delim_value < value) {
-                l = m;
+
+    // add conditions when there is no need to do a binsearch 
+    // 1) we are in the left subarray and our last element is lower than first element of right subarray
+    // 2) we are in the right subarray and out first element is higher than last element of left subarray
+    
+    if (num_subarray_in_pair == 0 && (start_index >= n || input_data[start_index - 1] <= input_data[start_index])) {
+        found_subarray_index = 0;
+    } else if (num_subarray_in_pair == 1 && input_data[start_index + sorted_k - 1] <= input_data[start_index + sorted_k]) {
+        found_subarray_index = sorted_k;
+    } else {
+        int l = -1, r = sorted_k;
+        for (uint j = 0; j < sorted_k; j++) {
+            uint m = (l + r) / 2;
+            uint delim_value = start_index + m < n ? input_data[start_index + m] : INT_MAX;
+            if (num_subarray_in_pair == 0) {
+                if (delim_value < value) {
+                    l = m;
+                } else {
+                    r = m;
+                }
             } else {
-                r = m;
+                if (delim_value <= value) {
+                    l = m;
+                } else {
+                    r = m;
+                }
             }
-        } else {
-            if (delim_value <= value) {
-                l = m;
-            } else {
-                r = m;
-            }
-        }
 
         if (l >= r - 1) {
             found_subarray_index = r;
