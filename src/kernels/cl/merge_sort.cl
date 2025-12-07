@@ -40,10 +40,10 @@ __kernel void merge_sort(
         found_subarray_index = 0;
     } else if (num_subarray_in_pair == 1 && input_data[start_index + sorted_k - 1] <= input_data[start_index + sorted_k]) {
         found_subarray_index = sorted_k;
-    } else if (num_subarray_in_pair == 1 && input_data[start_index] > input_data[global_id]) {
+    } else if (num_subarray_in_pair == 1 && input_data[start_index] > input_data[min(start_index + sorted_k + sorted_k - 1, n - 1)]) {
         found_subarray_index = 0;
     }
-    else if (num_subarray_in_pair == 0 && input_data[global_id] > input_data[min(start_index + sorted_k - 1, n - 1)]) {
+    else if (num_subarray_in_pair == 0 && input_data[start_index - sorted_k] > input_data[min(start_index + sorted_k - 1, n - 1)]) {
         found_subarray_index = min(sorted_k, n - start_index);
     } else {
         int l = -1, r = sorted_k;
