@@ -32,12 +32,19 @@ __kernel void merge_sort(
 
     // add conditions when there is no need to do a binsearch 
     // 1) we are in the left subarray and our last element is lower than first element of right subarray
-    // 2) we are in the right subarray and out first element is higher than last element of left subarray
+    // 2) we are in the right subarray and our first element is higher than last element of left subarray
+    // 3) we are in the right subarray and current element is lower than first element of right subarray
+    // 4) we are in the left subarray and current element is higher than last element of left subarray
     
     if (num_subarray_in_pair == 0 && (start_index >= n || input_data[start_index - 1] <= input_data[start_index])) {
         found_subarray_index = 0;
     } else if (num_subarray_in_pair == 1 && input_data[start_index + sorted_k - 1] <= input_data[start_index + sorted_k]) {
         found_subarray_index = sorted_k;
+    } else if (num_subarray_in_pair == 1 && input_data[start_index] > input_data[global_id]) {
+        found_subarray_index = 0;
+    }
+    else if (num_subarray_in_pair == 0 && input_data[global_id] > input_data[min(start_index + sorted_k - 1, n - 1)]) {
+        found_subarray_index = min(sorted_k, n - start_index);
     } else {
         int l = -1, r = sorted_k;
         for (uint j = 0; j < sorted_k; j++) {
