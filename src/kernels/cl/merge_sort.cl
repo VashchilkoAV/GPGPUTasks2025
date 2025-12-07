@@ -29,22 +29,31 @@ __kernel void merge_sort(
 
     // printf("%u %u %u %u %u\n", global_id, num_comparison_pair, num_subarray_in_pair, num_element_in_subarray, start_index);
 
-    for (uint i = 0; i < sorted_k; i++) {
-        // for left
+    int l = -1, r = sorted_k;
+    for (uint j = 0; j < sorted_k; j++) {
+        uint m = (l + r) / 2;
+        uint delim_value = start_index + m < n ? input_data[start_index + m] : INT_MAX;
         if (num_subarray_in_pair == 0) {
-            if (!found && start_index + i < n && input_data[start_index + i] < value) {
-                found_subarray_index++;
+            if (delim_value < value) {
+                l = m;
+            } else {
+                r = m;
             }
         } else {
-            if (!found && start_index + i < n && input_data[start_index + i] <= value) {
-                found_subarray_index++;
+            if (delim_value <= value) {
+                l = m;
+            } else {
+                r = m;
             }
+        }
+
+        if (l >= r - 1) {
+            found_subarray_index = r;
+            break;
         }
     }
     
     uint result_index = num_comparison_pair * (sorted_k * 2) + num_element_in_subarray + found_subarray_index;
-    
-    // printf("%u %u %u %u %u %u %u\n", global_id, num_comparison_pair, num_subarray_in_pair, num_element_in_subarray, start_index, found_subarray_index, result_index);
 
     if (result_index < n) {
         output_data[result_index] = value;
