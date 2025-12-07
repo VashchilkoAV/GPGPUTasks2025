@@ -57,11 +57,13 @@ __kernel void merge_sort(
                 }
             }
 
-        if (l >= r - 1) {
-            found_subarray_index = r;
-            break;
+            if (l >= r - 1) {
+                found_subarray_index = r;
+                break;
+            }
         }
     }
+    
     
     uint result_index = num_comparison_pair * (sorted_k * 2) + num_element_in_subarray + found_subarray_index;
 
