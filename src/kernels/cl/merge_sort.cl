@@ -14,6 +14,7 @@ __kernel void merge_sort(
 {
     const uint global_id = get_global_id(0);
     const uint local_id = get_local_id(0);
+    const uint group_id = get_group_id(0);
     const uint num_comparison_pair = global_id / (sorted_k * 2);
     const uint num_subarray_in_pair = global_id / sorted_k % 2;
     const uint num_element_in_subarray = global_id % sorted_k;

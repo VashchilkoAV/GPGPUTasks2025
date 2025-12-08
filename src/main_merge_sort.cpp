@@ -100,6 +100,11 @@ void run(int argc, char** argv)
 
     
     for (int iter = 0; iter < 10; ++iter) { // TODO при отладке запускайте одну итерацию
+        buffer1_gpu.fill(255);
+        buffer2_gpu.fill(255);
+        f1 = false;
+        f2 = false;
+
         timer t;
 
         // Запускаем кернел, с указанием размера рабочего пространства и передачей всех аргументов
