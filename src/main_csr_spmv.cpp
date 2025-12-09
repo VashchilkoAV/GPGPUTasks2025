@@ -157,14 +157,14 @@ void run(int argc, char** argv)
 
         // Запускаем кернел (несколько раз и с замером времени выполнения)
         std::vector<double> times;
+        gpu::WorkSize work_size(GROUP_SIZE, GROUP_SIZE * nrows);
         for (int iter = 0; iter < 10; ++iter) { // TODO при отладке запускайте одну итерацию
             t.restart();
 
             // Запускаем кернел, с указанием размера рабочего пространства и передачей всех аргументов
             // Если хотите - можете удалить ветвление здесь и оставить только тот код который соответствует вашему выбору API
             if (context.type() == gpu::Context::TypeOpenCL) {
-                // TODO
-                throw std::runtime_error(CODE_IS_NOT_IMPLEMENTED);
+                ocl_spvm.exec(work_size, csr_values_gpu, csr_columns_gpu, csr_row_offsets_gpu, vector_values_gpu, output_vector_values_gpu, nnz, nrows);
             } else if (context.type() == gpu::Context::TypeCUDA) {
                 // TODO
                 throw std::runtime_error(CODE_IS_NOT_IMPLEMENTED);
