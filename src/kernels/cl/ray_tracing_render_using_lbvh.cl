@@ -31,7 +31,7 @@ static inline bool bvh_closest_hit(
     const int rootIndex = 0;
     const int leafStart = (int)nfaces - 1;
 
-    float tIn = 0, tOut = 0;
+    float tIn = 0, tOut = 0, tInLeft = 0, tOutLeft = 0, tInRight = 0, tOutRight = 0, tOutBest = FLT_MAX;
     if (!intersect_ray_aabb_any(orig, dir, nodes[rootIndex].aabb, &tIn, &tOut)) {
         return false;
     }
@@ -72,13 +72,33 @@ static inline bool bvh_closest_hit(
             uint rightChildIdx = curr_node.rightChildIndex;
             BVHNodeGPU leftChild = nodes[leftChildIdx]; 
             BVHNodeGPU rightChild = nodes[rightChildIdx];
-            bool overlapL = intersect_ray_aabb_any(orig, dir, leftChild.aabb, &tIn, &tOut);
-            bool overlapR = intersect_ray_aabb_any(orig, dir, rightChild.aabb, &tIn, &tOut);
+            bool overlapL = intersect_ray_aabb_any(orig, dir, leftChild.aabb, &tInLeft, &tOutLeft);
+            bool perspectiveL = true;
+            if (tInLeft > *outT) {
+                perspectiveL = false;
+                rassert(perspectiveL, 1234);
+            }
 
-            if (overlapL) {
+            if (overlapL && tOutLeft < tOutBest) {
+                tOutBest = tOutLeft;
+            }
+            bool overlapR = intersect_ray_aabb_any(orig, dir, rightChild.aabb, &tInRight, &tOutRight);
+            bool perspectiveR = true;
+            if (tInRight > *outT) {
+                perspectiveR = false;
+                rassert(perspectiveR, 12345);
+            }
+
+            if (overlapR && tOutRight < tOutBest) {
+                tOutBest = tOutRight;
+            }
+
+
+
+            if (overlapL && perspectiveL) {
                 stack[lastElementIndex++] = leftChildIdx;
             }
-            if (overlapR) {
+            if (overlapR && perspectiveR) {
                 stack[lastElementIndex++] = rightChildIdx;
             }
             
