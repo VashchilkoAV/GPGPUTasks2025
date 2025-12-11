@@ -93,12 +93,18 @@ static inline bool bvh_closest_hit(
                 tOutBest = tOutRight;
             }
 
-
-
-            if (overlapL && perspectiveL) {
+            if (overlapL && perspectiveL && overlapR && perspectiveR) {
+                // get more perspective
+                if (tInLeft < tInRight) {
+                    stack[lastElementIndex++] = leftChildIdx;
+                    stack[lastElementIndex++] = rightChildIdx;
+                } else {
+                    stack[lastElementIndex++] = rightChildIdx;
+                    stack[lastElementIndex++] = leftChildIdx;
+                }
+            } else if (overlapL && perspectiveL) {
                 stack[lastElementIndex++] = leftChildIdx;
-            }
-            if (overlapR && perspectiveR) {
+            } else if (overlapR && perspectiveR) {
                 stack[lastElementIndex++] = rightChildIdx;
             }
             
