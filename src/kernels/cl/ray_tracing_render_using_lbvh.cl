@@ -133,6 +133,9 @@ static inline bool any_hit_from(
             bool intersects = intersect_ray_triangle_any(orig, dir, v0, v1, v2, false, &t, &u, &v);
 
             found = found || intersects;
+            if (found) { // strong acceleration on powerplant
+                return found;
+            }
         } else {
             BVHNodeGPU curr_node = nodes[nodeId];
             uint leftChildIdx = curr_node.leftChildIndex;
