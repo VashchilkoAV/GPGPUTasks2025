@@ -17,6 +17,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <numeric>
 
 // Считает сколько непустых пикселей
 template<typename T>
@@ -77,6 +78,10 @@ void run(int argc, char** argv)
 
     ocl::KernelSource ocl_rt_brute_force(ocl::getRTBruteForce());
     ocl::KernelSource ocl_rt_with_lbvh(ocl::getRTWithLBVH());
+    ocl::KernelSource ocl_lbvh_map_via_morton(ocl::getRTMapViaMorton());
+    ocl::KernelSource ocl_lbvh_merge_sort(ocl::getRTMergeSort());
+    ocl::KernelSource ocl_lbvh_make_nodes(ocl::getRTMakeNodes());
+    ocl::KernelSource ocl_lbvh_downup_aabb_completion(ocl::getRTDownupAABBCompletion());
 
     avk2::KernelSource vk_rt_brute_force(avk2::getRTBruteForce());
     avk2::KernelSource vk_rt_with_lbvh(avk2::getRTWithLBVH());
@@ -287,15 +292,119 @@ void run(int argc, char** argv)
 
         // TODO постройте LBVH на GPU
         // TODO оттрасируйте лучи на GPU используя построенный на GPU LBVH
-        bool gpu_lbvg_gpu_rt_done = false;
+
+        bool gpu_lbvg_gpu_rt_done = true;
+        gpu::shared_device_buffer_typed<BVHNodeGPU> nodes_gpu(nfaces * 2 - 1);
+        gpu::gpu_mem_32u morton_gpu(nfaces);
+        gpu::gpu_mem_32u parents_gpu(nfaces * 2 - 1);
+        gpu::gpu_mem_32u faces_buffer1_gpu(3 * nfaces), faces_buffer2_gpu(3 * nfaces);
+        gpu::gpu_mem_32u morton_buffer1_gpu(nfaces), morton_buffer2_gpu(nfaces);
+        gpu::gpu_mem_32u leaf_indices_buffer1_gpu(nfaces), leaf_indices_buffer2_gpu(nfaces);
+        gpu::gpu_mem_32u leaf_indices_gpu(nfaces);
+        gpu::gpu_mem_32u flags_gpu(nfaces);
+
+
+        faces_buffer1_gpu.fill(255);
+        faces_buffer2_gpu.fill(255);
+
+        morton_buffer1_gpu.fill(255);
+        morton_buffer2_gpu.fill(255);
+
+        leaf_indices_buffer1_gpu.fill(255);
+        leaf_indices_buffer2_gpu.fill(255);
+
+        parents_gpu.fill(UINT32_MAX);
+
+        flags_gpu.fill(0);
+
+        std::vector<uint> leafIndices(nfaces);
+        std::iota(std::begin(leafIndices), std::end(leafIndices), 0);
+        leaf_indices_gpu.writeN(leafIndices.data(), leafIndices.size());
+
+
+        gpu::WorkSize workSize(GROUP_SIZE, nfaces);
+
+        cl_float3 minC = {
+            +std::numeric_limits<float>::infinity(),
+            +std::numeric_limits<float>::infinity(),
+            +std::numeric_limits<float>::infinity()
+        };
+        cl_float3 maxC = {
+            -std::numeric_limits<float>::infinity(),
+            -std::numeric_limits<float>::infinity(),
+            -std::numeric_limits<float>::infinity()
+        };
+
+        for (const auto v: scene.vertices) {
+            minC = {
+                std::min(v.x, minC.s[0]),
+                std::min(v.y, minC.s[1]),
+                std::min(v.z, minC.s[2])
+            };
+
+            maxC = {
+                std::max(v.x, maxC.s[0]),
+                std::max(v.y, maxC.s[1]),
+                std::max(v.z, maxC.s[2])
+            };
+        }
+
 
         if (gpu_lbvg_gpu_rt_done) {
+            bool f1 = false, f2 = false;
+
             std::vector<double> gpu_lbvh_times;
             for (int iter = 0; iter < niters; ++iter) {
                 timer t;
 
-                // TODO постройте LBVH на GPU
+                // map morton code for each face
+                ocl_lbvh_map_via_morton.exec(workSize, vertices_gpu, faces_gpu, morton_gpu, minC, maxC, nfaces);
+                
+                ahahah = morton_gpu.readVector();
+                uint min = -1, max = 0;
+                uint idx_min = 0, idx_max = 0;
+                for (uint i = 0; i < ahahah.size(); i++) {
+                    if (ahahah[i] < min) {
+                        idx_min = i;
+                        min = ahahah[i];
+                    }
 
+                    if (ahahah[i] > max) {
+                        idx_max = i;
+                        max = ahahah[i];
+                    }
+                }
+
+                // sort faces by morton code -- returns sorted morton, sorted indices, sorted faces
+                // maybe it would be faster to sort indices and make scatter, because otherwise we must rearrange 3 uints per item on each iteration
+                for (unsigned int subarray_length = 1; subarray_length < nfaces; subarray_length *= 2) {
+                    if (!f1 && !f2) {
+                        ocl_lbvh_merge_sort.exec(workSize, morton_gpu, morton_buffer1_gpu, faces_gpu, faces_buffer1_gpu, leaf_indices_gpu, leaf_indices_buffer1_gpu, subarray_length, nfaces);
+                        f1 = true;
+                    } else if (f1) {
+                        ocl_lbvh_merge_sort.exec(workSize, morton_buffer1_gpu, morton_buffer2_gpu, faces_buffer1_gpu, faces_buffer2_gpu, leaf_indices_buffer1_gpu, leaf_indices_buffer2_gpu, subarray_length, nfaces);
+                        f1 = false;
+                        f2 = true;
+                    } else {
+                        ocl_lbvh_merge_sort.exec(workSize, morton_buffer2_gpu, morton_buffer1_gpu, faces_buffer2_gpu, faces_buffer1_gpu, leaf_indices_buffer2_gpu, leaf_indices_buffer1_gpu, subarray_length, nfaces);
+                        f2 = false;
+                        f1 = true;
+                    }
+                }
+
+                // make LBVH using sorted faces -- need sorted morton for making splits, sorted faces or (sorted indices and original faces) to make leave nodes
+                if (f1) {
+                    ocl_lbvh_make_nodes.exec(workSize, morton_buffer1_gpu, vertices_gpu, faces_buffer1_gpu, nodes_gpu.clmem(), parents_gpu, nfaces);
+                } else {
+                    ocl_lbvh_make_nodes.exec(workSize, morton_buffer2_gpu, vertices_gpu, faces_buffer2_gpu, nodes_gpu.clmem(), parents_gpu, nfaces);
+                } 
+
+                // make aabb for tree -- need tree, parents (optional), sorted faces and vertices (if make leaves here) 
+                if (f1) {
+                    ocl_lbvh_downup_aabb_completion.exec(workSize, vertices_gpu, faces_buffer1_gpu, parents_gpu, nodes_gpu.clmem(), flags_gpu, nfaces);
+                } else {
+                    ocl_lbvh_downup_aabb_completion.exec(workSize, vertices_gpu, faces_buffer2_gpu, parents_gpu, nodes_gpu.clmem(), flags_gpu, nfaces);
+                }
                 gpu_lbvh_times.push_back(t.elapsed());
             }
             gpu_lbvh_time_sum = stats::sum(gpu_lbvh_times);
@@ -313,7 +422,22 @@ void run(int argc, char** argv)
             for (int iter = 0; iter < niters; ++iter) {
                 timer t;
 
-                // TODO оттрасируйте лучи на GPU используя построенный на GPU LBVH
+                if (f1) {
+                    ocl_rt_with_lbvh.exec(
+                        gpu::WorkSize(16, 16, width, height),
+                        vertices_gpu, faces_gpu,
+                        nodes_gpu.clmem(), leaf_indices_buffer1_gpu,
+                        framebuffer_face_id_gpu, framebuffer_ambient_occlusion_gpu,
+                        camera_gpu.clmem(), nfaces);
+                } else {
+                    ocl_rt_with_lbvh.exec(
+                        gpu::WorkSize(16, 16, width, height),
+                        vertices_gpu, faces_gpu,
+                        nodes_gpu.clmem(), leaf_indices_buffer2_gpu,
+                        framebuffer_face_id_gpu, framebuffer_ambient_occlusion_gpu,
+                        camera_gpu.clmem(), nfaces);
+                }
+                
 
                 gpu_lbvh_rt_times.push_back(t.elapsed());
             }

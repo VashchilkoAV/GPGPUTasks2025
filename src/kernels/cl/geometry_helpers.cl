@@ -4,6 +4,12 @@
 
 #include "../shared_structs/aabb_gpu_shared.h"
 
+static inline void setFace(__global uint* faces, uint3 face, uint index) {
+    faces[3 * index + 0] = face.x;
+    faces[3 * index + 1] = face.y;
+    faces[3 * index + 2] = face.z;
+}
+
 // Load vertex/face from compact arrays
 static inline float3 loadVertex(__global const float* vertices,
                                 uint                  vi)

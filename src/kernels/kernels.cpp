@@ -3,6 +3,10 @@
 #include "cl/generated_kernels/aplusb.h"
 #include "cl/generated_kernels/ray_tracing_render_brute_force.h"
 #include "cl/generated_kernels/ray_tracing_render_using_lbvh.h"
+#include "cl/generated_kernels/ray_tracing_map_via_morton_code.h"
+#include "cl/generated_kernels/ray_tracing_merge_sort.h"
+#include "cl/generated_kernels/ray_tracing_make_nodes.h"
+#include "cl/generated_kernels/ray_tracing_downup_aabb_completion.h"
 
 #include "vk/generated_kernels/aplusb_comp.h"
 #include "vk/generated_kernels/ray_tracing_render_brute_force_comp.h"
@@ -54,6 +58,26 @@ const ProgramBinaries& getRTBruteForce()
 const ProgramBinaries& getRTWithLBVH()
 {
     return opencl_binaries_ray_tracing_render_using_lbvh;
+}
+
+const ProgramBinaries& getRTMapViaMorton()
+{
+    return opencl_binaries_ray_tracing_map_via_morton_code;
+}
+
+const ProgramBinaries& getRTMergeSort()
+{
+    return opencl_binaries_ray_tracing_merge_sort;
+}
+
+const ProgramBinaries& getRTMakeNodes()
+{
+    return opencl_binaries_ray_tracing_make_nodes;
+}
+
+const ProgramBinaries& getRTDownupAABBCompletion()
+{
+    return opencl_binaries_ray_tracing_downup_aabb_completion;
 }
 } // namespace ocl
 

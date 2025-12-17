@@ -9,6 +9,8 @@
 
 #define STACK_SIZE 256
 
+#define EPS 1e-9f
+
 #define RASSERT_ENABLED 0 // disabled by default, enable for debug by changing 0 to 1, disable before performance evaluation/profiling/commiting
 
 #endif // pragma once
