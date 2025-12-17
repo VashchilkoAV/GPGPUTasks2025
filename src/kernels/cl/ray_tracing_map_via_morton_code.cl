@@ -72,9 +72,9 @@ __kernel void ray_tracing_map_via_morton_code(
     uint                      nFaces)
 {
     const uint global_id = get_global_id(0);
-    if (global_id == 0) {
-        printf("%f %f %f -- %f %f %f\n", minC.x, minC.y, minC.z, maxC.x, maxC.y, maxC.z);
-    }
+    // if (global_id == 0) {
+    //     printf("%f %f %f -- %f %f %f\n", minC.x, minC.y, minC.z, maxC.x, maxC.y, maxC.z);
+    // }
 
     if (global_id < nFaces) {
         const uint3 face = loadFace(faces, global_id);
