@@ -360,20 +360,6 @@ void run(int argc, char** argv)
                 // map morton code for each face
                 ocl_lbvh_map_via_morton.exec(workSize, vertices_gpu, faces_gpu, morton_gpu, minC, maxC, nfaces);
                 
-                ahahah = morton_gpu.readVector();
-                uint min = -1, max = 0;
-                uint idx_min = 0, idx_max = 0;
-                for (uint i = 0; i < ahahah.size(); i++) {
-                    if (ahahah[i] < min) {
-                        idx_min = i;
-                        min = ahahah[i];
-                    }
-
-                    if (ahahah[i] > max) {
-                        idx_max = i;
-                        max = ahahah[i];
-                    }
-                }
 
                 // sort faces by morton code -- returns sorted morton, sorted indices, sorted faces
                 // maybe it would be faster to sort indices and make scatter, because otherwise we must rearrange 3 uints per item on each iteration
