@@ -10,8 +10,6 @@ __attribute__((reqd_work_group_size(GROUP_SIZE, 1, 1)))
 __kernel void ray_tracing_merge_sort(
     __global const uint* input_key,
     __global       uint* output_key,
-    __global const uint* input_value,
-    __global       uint* output_value,
     __global const uint* input_index,
     __global       uint* output_index,
                    uint  sorted_k,
@@ -29,7 +27,6 @@ __kernel void ray_tracing_merge_sort(
     }
 
     uint key = input_key[global_id];
-    uint3 value = loadFace(input_value, global_id);
     uint index = input_index[global_id];
 
     const uint start_index = num_comparison_pair * (sorted_k * 2) + sorted_k * ((num_subarray_in_pair + 1) % 2);

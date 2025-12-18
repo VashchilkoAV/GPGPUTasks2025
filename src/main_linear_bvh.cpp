@@ -365,14 +365,14 @@ void run(int argc, char** argv)
                 // maybe it would be faster to sort indices and make scatter, because otherwise we must rearrange 3 uints per item on each iteration
                 for (unsigned int subarray_length = 1; subarray_length < nfaces; subarray_length *= 2) {
                     if (!f1 && !f2) {
-                        ocl_lbvh_merge_sort.exec(workSize, morton_gpu, morton_buffer1_gpu, faces_gpu, faces_buffer1_gpu, leaf_indices_gpu, leaf_indices_buffer1_gpu, subarray_length, nfaces);
+                        ocl_lbvh_merge_sort.exec(workSize, morton_gpu, morton_buffer1_gpu, leaf_indices_gpu, leaf_indices_buffer1_gpu, subarray_length, nfaces);
                         f1 = true;
                     } else if (f1) {
-                        ocl_lbvh_merge_sort.exec(workSize, morton_buffer1_gpu, morton_buffer2_gpu, faces_buffer1_gpu, faces_buffer2_gpu, leaf_indices_buffer1_gpu, leaf_indices_buffer2_gpu, subarray_length, nfaces);
+                        ocl_lbvh_merge_sort.exec(workSize, morton_buffer1_gpu, morton_buffer2_gpu, leaf_indices_buffer1_gpu, leaf_indices_buffer2_gpu, subarray_length, nfaces);
                         f1 = false;
                         f2 = true;
                     } else {
-                        ocl_lbvh_merge_sort.exec(workSize, morton_buffer2_gpu, morton_buffer1_gpu, faces_buffer2_gpu, faces_buffer1_gpu, leaf_indices_buffer2_gpu, leaf_indices_buffer1_gpu, subarray_length, nfaces);
+                        ocl_lbvh_merge_sort.exec(workSize, morton_buffer2_gpu, morton_buffer1_gpu, leaf_indices_buffer2_gpu, leaf_indices_buffer1_gpu, subarray_length, nfaces);
                         f2 = false;
                         f1 = true;
                     }
@@ -390,9 +390,9 @@ void run(int argc, char** argv)
 
                 // make aabb for tree -- need tree, parents (optional), sorted faces and vertices (if make leaves here) 
                 if (f1) {
-                    ocl_lbvh_downup_aabb_completion.exec(workSize, vertices_gpu, faces_buffer1_gpu, parents_gpu, nodes_gpu.clmem(), flags_gpu, nfaces);
+                    ocl_lbvh_downup_aabb_completion.exec(workSize, parents_gpu, nodes_gpu.clmem(), flags_gpu, nfaces);
                 } else {
-                    ocl_lbvh_downup_aabb_completion.exec(workSize, vertices_gpu, faces_buffer2_gpu, parents_gpu, nodes_gpu.clmem(), flags_gpu, nfaces);
+                    ocl_lbvh_downup_aabb_completion.exec(workSize, parents_gpu, nodes_gpu.clmem(), flags_gpu, nfaces);
                 }
                 gpu_lbvh_times.push_back(t.elapsed());
             }

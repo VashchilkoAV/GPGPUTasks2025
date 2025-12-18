@@ -21,8 +21,6 @@
 
 __attribute__((reqd_work_group_size(GROUP_SIZE, 1, 1)))
 __kernel void ray_tracing_downup_aabb_completion(
-    __global const float*     vertices,
-    __global const uint*      faces,
     __global const uint*      parents,
     __global BVHNodeGPU*      nodes,
     __global uint*            flags,
