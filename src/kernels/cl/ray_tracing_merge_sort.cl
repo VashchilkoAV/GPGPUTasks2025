@@ -87,7 +87,7 @@ __kernel void ray_tracing_merge_sort(
     if (result_index < n) {
         output_key[result_index] = key;
         // output_value[result_index] = value;
-        setFace(output_value, value, result_index);
+        // setFace(output_value, value, result_index);
         output_index[result_index] = index;
     }
 }

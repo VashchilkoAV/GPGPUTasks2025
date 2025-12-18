@@ -379,10 +379,13 @@ void run(int argc, char** argv)
                 }
 
                 // make LBVH using sorted faces -- need sorted morton for making splits, sorted faces or (sorted indices and original faces) to make leave nodes
+                // pass indices and original faces
                 if (f1) {
-                    ocl_lbvh_make_nodes.exec(workSize, morton_buffer1_gpu, vertices_gpu, faces_buffer1_gpu, nodes_gpu.clmem(), parents_gpu, nfaces);
+                    // ocl_lbvh_make_nodes.exec(workSize, morton_buffer1_gpu, vertices_gpu, faces_buffer1_gpu, nodes_gpu.clmem(), parents_gpu, nfaces);
+                    ocl_lbvh_make_nodes.exec(workSize, morton_buffer1_gpu, vertices_gpu, faces_buffer1_gpu, leaf_indices_buffer1_gpu, nodes_gpu.clmem(), parents_gpu, nfaces);
                 } else {
-                    ocl_lbvh_make_nodes.exec(workSize, morton_buffer2_gpu, vertices_gpu, faces_buffer2_gpu, nodes_gpu.clmem(), parents_gpu, nfaces);
+                    // ocl_lbvh_make_nodes.exec(workSize, morton_buffer2_gpu, vertices_gpu, faces_buffer2_gpu, nodes_gpu.clmem(), parents_gpu, nfaces);
+                    ocl_lbvh_make_nodes.exec(workSize, morton_buffer2_gpu, vertices_gpu, faces_buffer2_gpu, leaf_indices_buffer2_gpu, nodes_gpu.clmem(), parents_gpu, nfaces);
                 } 
 
                 // make aabb for tree -- need tree, parents (optional), sorted faces and vertices (if make leaves here) 

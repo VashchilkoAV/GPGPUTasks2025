@@ -24,6 +24,7 @@ __kernel void ray_tracing_make_nodes(
     __global const uint*      mortonCodes,
     __global const float*     vertices,
     __global const uint*      faces,
+    __global const uint*      triIndices,
     __global BVHNodeGPU*      nodes,
     __global uint*            parents,
     uint                      nFaces)
@@ -33,7 +34,9 @@ __kernel void ray_tracing_make_nodes(
     
     // make leaf node
     if (global_id < nFaces) {
-        const uint3 face = loadFace(faces, global_id);
+        const uint faceId = triIndices[global_id];
+        // const uint faceId = get_group_id
+        const uint3 face = loadFace(faces, faceId);
         const float3 v0 = loadVertex(vertices, face.x);
         const float3 v1 = loadVertex(vertices, face.y);
         const float3 v2 = loadVertex(vertices, face.z);
