@@ -29,12 +29,23 @@ __kernel void ray_tracing_downup_aabb_completion(
         if (nodeId < nFaces && atomic_inc(flags + nodeId) == 0) {
             
         } else {
-            nodes[nodeId].aabb.min_x = min(nodes[nodes[nodeId].leftChildIndex].aabb.min_x, nodes[nodes[nodeId].rightChildIndex].aabb.min_x);
-            nodes[nodeId].aabb.max_x = max(nodes[nodes[nodeId].leftChildIndex].aabb.max_x, nodes[nodes[nodeId].rightChildIndex].aabb.max_x);
-            nodes[nodeId].aabb.min_y = min(nodes[nodes[nodeId].leftChildIndex].aabb.min_y, nodes[nodes[nodeId].rightChildIndex].aabb.min_y);
-            nodes[nodeId].aabb.max_y = max(nodes[nodes[nodeId].leftChildIndex].aabb.max_y, nodes[nodes[nodeId].rightChildIndex].aabb.max_y);
-            nodes[nodeId].aabb.min_z = min(nodes[nodes[nodeId].leftChildIndex].aabb.min_z, nodes[nodes[nodeId].rightChildIndex].aabb.min_z);
-            nodes[nodeId].aabb.max_z = max(nodes[nodes[nodeId].leftChildIndex].aabb.max_z, nodes[nodes[nodeId].rightChildIndex].aabb.max_z);
+            const AABBGPU l = nodes[nodes[nodeId].leftChildIndex].aabb;
+            const AABBGPU r = nodes[nodes[nodeId].rightChildIndex].aabb;
+            nodes[nodeId].aabb = (AABBGPU) {
+                min(l.min_x, r.min_x),
+                min(l.min_y, r.min_y),
+                min(l.min_z, r.min_z),
+                max(l.max_x, r.max_x),
+                max(l.max_y, r.max_y),
+                max(l.max_z, r.max_z)
+            };
+
+            // nodes[nodeId].aabb.min_x = min(nodes[nodes[nodeId].leftChildIndex].aabb.min_x, nodes[nodes[nodeId].rightChildIndex].aabb.min_x);
+            // nodes[nodeId].aabb.max_x = max(nodes[nodes[nodeId].leftChildIndex].aabb.max_x, nodes[nodes[nodeId].rightChildIndex].aabb.max_x);
+            // nodes[nodeId].aabb.min_y = min(nodes[nodes[nodeId].leftChildIndex].aabb.min_y, nodes[nodes[nodeId].rightChildIndex].aabb.min_y);
+            // nodes[nodeId].aabb.max_y = max(nodes[nodes[nodeId].leftChildIndex].aabb.max_y, nodes[nodes[nodeId].rightChildIndex].aabb.max_y);
+            // nodes[nodeId].aabb.min_z = min(nodes[nodes[nodeId].leftChildIndex].aabb.min_z, nodes[nodes[nodeId].rightChildIndex].aabb.min_z);
+            // nodes[nodeId].aabb.max_z = max(nodes[nodes[nodeId].leftChildIndex].aabb.max_z, nodes[nodes[nodeId].rightChildIndex].aabb.max_z);
         }
     }
 
