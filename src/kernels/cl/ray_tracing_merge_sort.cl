@@ -43,16 +43,16 @@ __kernel void ray_tracing_merge_sort(
     // 3) we are in the right subarray and current element is lower than first element of right subarray
     // 4) we are in the left subarray and current element is higher than last element of left subarray
     
-    if (num_subarray_in_pair == 0 && (start_index >= n || input_key[start_index - 1] <= input_key[start_index])) {
-        found_subarray_index = 0;
-    } else if (num_subarray_in_pair == 1 && input_key[start_index + sorted_k - 1] <= input_key[start_index + sorted_k]) {
-        found_subarray_index = sorted_k;
-    } else if (num_subarray_in_pair == 1 && input_key[start_index] > input_key[min(start_index + sorted_k + sorted_k - 1, n - 1)]) {
-        found_subarray_index = 0;
-    }
-    else if (num_subarray_in_pair == 0 && input_key[start_index - sorted_k] > input_key[min(start_index + sorted_k - 1, n - 1)]) {
-        found_subarray_index = min(sorted_k, n - start_index);
-    } else {
+    // if (num_subarray_in_pair == 0 && (start_index >= n || input_key[start_index - 1] <= input_key[start_index])) {
+    //     found_subarray_index = 0;
+    // } else if (num_subarray_in_pair == 1 && input_key[start_index + sorted_k - 1] <= input_key[start_index + sorted_k]) {
+    //     found_subarray_index = sorted_k;
+    // } else if (num_subarray_in_pair == 1 && input_key[start_index] > input_key[min(start_index + sorted_k + sorted_k - 1, n - 1)]) {
+    //     found_subarray_index = 0;
+    // }
+    // else if (num_subarray_in_pair == 0 && input_key[start_index - sorted_k] > input_key[min(start_index + sorted_k - 1, n - 1)]) {
+    //     found_subarray_index = min(sorted_k, n - start_index);
+    // } else {
         int l = -1, r = sorted_k;
         for (uint j = 0; j < sorted_k; j++) {
             uint m = (l + r) / 2;
@@ -76,7 +76,7 @@ __kernel void ray_tracing_merge_sort(
                 break;
             }
         }
-    }
+    // }
     
     
     uint result_index = num_comparison_pair * (sorted_k * 2) + num_element_in_subarray + found_subarray_index;
