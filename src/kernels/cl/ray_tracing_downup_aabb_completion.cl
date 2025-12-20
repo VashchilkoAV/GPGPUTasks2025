@@ -21,11 +21,12 @@ __kernel void ray_tracing_downup_aabb_completion(
     const uint global_id = get_global_id(0);
 
     if (global_id >= nFaces * 2 - 1) return;
+    if (global_id >= nFaces) return;
 
     #pragma unroll
     for (__private uint nodeId = parents[nFaces - 1 + global_id]; nodeId < UINT_MAX; nodeId = parents[nodeId]) {
     // while (true) {
-        if (atomic_inc(flags + nodeId) == 0) {
+        if (nodeId < nFaces && atomic_inc(flags + nodeId) == 0) {
             
         } else {
             nodes[nodeId].aabb.min_x = min(nodes[nodes[nodeId].leftChildIndex].aabb.min_x, nodes[nodes[nodeId].rightChildIndex].aabb.min_x);
