@@ -75,8 +75,8 @@ static inline bool intersect_ray_triangle(const float3 ray_o,
                                           __private float* v)
 {
     // Edges
-    const float3 e1 = (float3)(v1.x - v0.x, v1.y - v0.y, v1.z - v0.z);
-    const float3 e2 = (float3)(v2.x - v0.x, v2.y - v0.y, v2.z - v0.z);
+    const float3 e1 = v1 - v0;
+    const float3 e2 = v2 - v0;
 
     // pvec = d x e2
     const float3 pvec = cross(ray_d, e2);
@@ -92,12 +92,10 @@ static inline bool intersect_ray_triangle(const float3 ray_o,
             return false;
     }
 
-    const float invDet = 1.0f / det;
+    const float invDet = native_divide(1.0f, det);
 
     // s = o - v0; u = (s·pvec)/det
-    const float3 s = (float3)(ray_o.x - v0.x,
-                              ray_o.y - v0.y,
-                              ray_o.z - v0.z);
+    const float3 s = ray_o - v0;
     *u = dot(s, pvec) * invDet;
     if (*u < 0.0f || *u > 1.0f)
         return false;
@@ -154,7 +152,7 @@ static inline bool intersect_ray_aabb(const float3 ray_o,
         if (ray_o.x < box.min_x || ray_o.x > box.max_x)
             return false;
     } else {
-        float invDx = 1.0f / ray_d.x;
+        float invDx = native_divide(1.0f, ray_d.x);
         float tx0   = (box.min_x - ray_o.x) * invDx;
         float tx1   = (box.max_x - ray_o.x) * invDx;
         if (invDx < 0.0f) {
@@ -170,7 +168,7 @@ static inline bool intersect_ray_aabb(const float3 ray_o,
         if (ray_o.y < box.min_y || ray_o.y > box.max_y)
             return false;
     } else {
-        float invDy = 1.0f / ray_d.y;
+        float invDy = native_divide(1.0f, ray_d.y);
         float ty0   = (box.min_y - ray_o.y) * invDy;
         float ty1   = (box.max_y - ray_o.y) * invDy;
         if (invDy < 0.0f) {
@@ -186,7 +184,7 @@ static inline bool intersect_ray_aabb(const float3 ray_o,
         if (ray_o.z < box.min_z || ray_o.z > box.max_z)
             return false;
     } else {
-        float invDz = 1.0f / ray_d.z;
+        float invDz = native_divide(1.0f, ray_d.z);
         float tz0   = (box.min_z - ray_o.z) * invDz;
         float tz1   = (box.max_z - ray_o.z) * invDz;
         if (invDz < 0.0f) {
