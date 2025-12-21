@@ -255,30 +255,23 @@ __kernel void ray_tracing_render_using_lbvh(
         float3 b = loadVertex(vertices, f.y);
         float3 c = loadVertex(vertices, f.z);
 
-        float3 e1 = (float3)(b.x - a.x, b.y - a.y, b.z - a.z);
-        float3 e2 = (float3)(c.x - a.x, c.y - a.y, c.z - a.z);
+        float3 e1 = b - a;
+        float3 e2 = c - a;
         float3 n  = fast_normalize(cross(e1, e2));
 
         // ensure hemisphere is "outside" relative to the camera ray
-        if (n.x * ray_direction.x +
-            n.y * ray_direction.y +
-            n.z * ray_direction.z > 0.0f)
-        {
-            n = (float3)(-n.x, -n.y, -n.z);
+        if (dot(n, ray_direction) > 0.0f) {
+            n = -n;
         }
 
-        float3 P = (float3)(ray_origin.x + tBest * ray_direction.x,
-                            ray_origin.y + tBest * ray_direction.y,
-                            ray_origin.z + tBest * ray_direction.z);
+        float3 P = ray_origin + tBest * ray_direction;
 
-        float3 ac = (float3)(c.x - a.x, c.y - a.y, c.z - a.z);
+        float3 ac = c - a;
         float  scale = fmax(fmax(fast_length(e1), fast_length(e2)),
                             fast_length(ac));
 
         float  eps = 1e-3f * fmax(1.0f, scale);
-        float3 Po  = (float3)(P.x + n.x * eps,
-                              P.y + n.y * eps,
-                              P.z + n.z * eps);
+        float3 Po  = P + n * eps;
 
         // build tangent basis
         float3 T;
@@ -306,11 +299,7 @@ __kernel void ray_tracing_render_using_lbvh(
                                       z);
 
             // transform to world space
-            float3 d = (float3)(
-                T.x * d_local.x + B.x * d_local.y + n.x * d_local.z,
-                T.y * d_local.x + B.y * d_local.y + n.y * d_local.z,
-                T.z * d_local.x + B.z * d_local.y + n.z * d_local.z
-            );
+            float3 d = T * d_local.x + B * d_local.y + n * d_local.z;
 
             if (any_hit_from(Po, d,
                              vertices, faces,
