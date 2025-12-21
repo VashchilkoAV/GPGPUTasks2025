@@ -194,7 +194,7 @@ static inline void make_basis(const float3 n,
         ? (float3)(0.0f, 0.0f, 1.0f)
         : (float3)(0.0f, 1.0f, 0.0f);
 
-    *t = normalize(cross(up, n));
+    *t = fast_normalize(cross(up, n));
     *b = cross(n, *t);
 }
 
@@ -257,7 +257,7 @@ __kernel void ray_tracing_render_using_lbvh(
 
         float3 e1 = (float3)(b.x - a.x, b.y - a.y, b.z - a.z);
         float3 e2 = (float3)(c.x - a.x, c.y - a.y, c.z - a.z);
-        float3 n  = normalize(cross(e1, e2));
+        float3 n  = fast_normalize(cross(e1, e2));
 
         // ensure hemisphere is "outside" relative to the camera ray
         if (n.x * ray_direction.x +
@@ -272,8 +272,8 @@ __kernel void ray_tracing_render_using_lbvh(
                             ray_origin.z + tBest * ray_direction.z);
 
         float3 ac = (float3)(c.x - a.x, c.y - a.y, c.z - a.z);
-        float  scale = fmax(fmax(length(e1), length(e2)),
-                            length(ac));
+        float  scale = fmax(fmax(fast_length(e1), fast_length(e2)),
+                            fast_length(ac));
 
         float  eps = 1e-3f * fmax(1.0f, scale);
         float3 Po  = (float3)(P.x + n.x * eps,
@@ -300,9 +300,9 @@ __kernel void ray_tracing_render_using_lbvh(
             float u2  = random01(&rng);
             float z   = u1;                      // z in [0,1]
             float phi = 6.28318530718f * u2;     // 2*pi*u2
-            float r   = sqrt(fmax(0.0f, 1.0f - z * z));
-            float3 d_local = (float3)(r * cos(phi),
-                                      r * sin(phi),
+            float r   = native_sqrt(fmax(0.0f, 1.0f - z * z));
+            float3 d_local = (float3)(r * native_cos(phi),
+                                      r * native_sin(phi),
                                       z);
 
             // transform to world space

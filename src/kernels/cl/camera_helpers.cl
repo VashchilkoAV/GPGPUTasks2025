@@ -32,5 +32,5 @@ static inline void make_primary_ray(__global const CameraViewGPU* cam,
 
     // 4) origin = camera center in world; direction normalized
     *ray_o = (float3)(cam->E.C[0], cam->E.C[1], cam->E.C[2]);
-    *ray_d = normalize((float3)(dx, dy, dz));
+    *ray_d = fast_normalize((float3)(dx, dy, dz));
 }
