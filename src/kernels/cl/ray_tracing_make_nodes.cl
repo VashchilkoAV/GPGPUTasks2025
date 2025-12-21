@@ -42,12 +42,12 @@ __kernel void ray_tracing_make_nodes(
         const float3 v2 = loadVertex(vertices, face.z);
         
         AABBGPU aabb;
-        aabb.min_x = min(min(v0.x, v1.x), v2.x);
-        aabb.max_x = max(max(v0.x, v1.x), v2.x);
-        aabb.min_y = min(min(v0.y, v1.y), v2.y);
-        aabb.max_y = max(max(v0.y, v1.y), v2.y);
-        aabb.min_z = min(min(v0.z, v1.z), v2.z);
-        aabb.max_z = max(max(v0.z, v1.z), v2.z);
+        aabb.min_x = fmin(fmin(v0.x, v1.x), v2.x);
+        aabb.max_x = fmax(fmax(v0.x, v1.x), v2.x);
+        aabb.min_y = fmin(fmin(v0.y, v1.y), v2.y);
+        aabb.max_y = fmax(fmax(v0.y, v1.y), v2.y);
+        aabb.min_z = fmin(fmin(v0.z, v1.z), v2.z);
+        aabb.max_z = fmax(fmax(v0.z, v1.z), v2.z);
 
         BVHNodeGPU node;
         node.aabb = aabb;
