@@ -77,11 +77,11 @@ __kernel void ray_tracing_map_via_morton_code(
     // }
 
     if (global_id < nFaces) {
-        const uint3 face = loadFace(faces, global_id);
+        const uint3 face = vload3(global_id, faces);
 
-        const float3 v0 = loadVertex(vertices, face.x);
-        const float3 v1 = loadVertex(vertices, face.y);
-        const float3 v2 = loadVertex(vertices, face.z);
+        const float3 v0 = vload3(face.x, vertices);
+        const float3 v1 = vload3(face.y, vertices);
+        const float3 v2 = vload3(face.z, vertices);
 
         const float3 baricenter = native_divide(v0 + v1 + v2, 3.f);
         // const float3 nBaricenter = native_divide(baricenter - minC, clamp(maxC - minC, EPS, FLT_MAX));

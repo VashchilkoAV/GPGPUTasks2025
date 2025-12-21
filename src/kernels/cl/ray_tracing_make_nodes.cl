@@ -36,10 +36,10 @@ __kernel void ray_tracing_make_nodes(
     if (global_id < nFaces) {
         const uint faceId = triIndices[global_id];
         // const uint faceId = get_group_id
-        const uint3 face = loadFace(faces, faceId);
-        const float3 v0 = loadVertex(vertices, face.x);
-        const float3 v1 = loadVertex(vertices, face.y);
-        const float3 v2 = loadVertex(vertices, face.z);
+        const uint3 face = vload3(faceId, faces);
+        const float3 v0 = vload3(face.x, vertices);
+        const float3 v1 = vload3(face.y, vertices);
+        const float3 v2 = vload3(face.z, vertices);
         
         AABBGPU aabb;
         aabb.min_x = fmin(fmin(v0.x, v1.x), v2.x);

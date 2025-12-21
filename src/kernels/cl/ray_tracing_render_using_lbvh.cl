@@ -50,11 +50,11 @@ static inline bool bvh_closest_hit(
             // possibly even use tIn/tOut of AABB
             float t, u, v;
             const uint faceId = leafTriIndices[nodeId - leafStart];
-            const uint3 face = loadFace(faces, faceId);
+            const uint3 face = vload3(faceId, faces);
 
-            const float3 v0 = loadVertex(vertices, face.x);
-            const float3 v1 = loadVertex(vertices, face.y);
-            const float3 v2 = loadVertex(vertices, face.z);
+            const float3 v0 = vload3(face.x, vertices);
+            const float3 v1 = vload3(face.y, vertices);
+            const float3 v2 = vload3(face.z, vertices);
             
             bool intersects = intersect_ray_triangle(orig, dir, v0, v1, v2, tMin, FLT_MAX, false, &t, &u, &v);
             found = found || intersects;
@@ -150,11 +150,11 @@ static inline bool any_hit_from(
             if (faceId == ignore_face) {
                 continue;
             }
-            const uint3 face = loadFace(faces, faceId);
+            const uint3 face = vload3(faceId, faces);
 
-            const float3 v0 = loadVertex(vertices, face.x);
-            const float3 v1 = loadVertex(vertices, face.y);
-            const float3 v2 = loadVertex(vertices, face.z);
+            const float3 v0 = vload3(face.x, vertices);
+            const float3 v1 = vload3(face.y, vertices);
+            const float3 v2 = vload3(face.z, vertices);
             
             bool intersects = intersect_ray_triangle_any(orig, dir, v0, v1, v2, false, &t, &u, &v);
 
@@ -250,10 +250,10 @@ __kernel void ray_tracing_render_using_lbvh(
     float ao = 1.0f; // background stays white
 
     if (faceIdBest >= 0) {
-        uint3  f = loadFace(faces, (uint)faceIdBest);
-        float3 a = loadVertex(vertices, f.x);
-        float3 b = loadVertex(vertices, f.y);
-        float3 c = loadVertex(vertices, f.z);
+        uint3  f = vload3((uint)faceIdBest, faces);
+        float3 a = vload3(f.x, vertices);
+        float3 b = vload3(f.y, vertices);
+        float3 c = vload3(f.z, vertices);
 
         float3 e1 = b - a;
         float3 e2 = c - a;
