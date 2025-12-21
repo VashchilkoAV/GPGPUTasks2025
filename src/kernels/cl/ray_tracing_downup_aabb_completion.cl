@@ -32,12 +32,12 @@ __kernel void ray_tracing_downup_aabb_completion(
             const AABBGPU l = nodes[nodes[nodeId].leftChildIndex].aabb;
             const AABBGPU r = nodes[nodes[nodeId].rightChildIndex].aabb;
             nodes[nodeId].aabb = (AABBGPU) {
-                min(l.min_x, r.min_x),
-                min(l.min_y, r.min_y),
-                min(l.min_z, r.min_z),
-                max(l.max_x, r.max_x),
-                max(l.max_y, r.max_y),
-                max(l.max_z, r.max_z)
+                fmin(l.min_x, r.min_x),
+                fmin(l.min_y, r.min_y),
+                fmin(l.min_z, r.min_z),
+                fmax(l.max_x, r.max_x),
+                fmax(l.max_y, r.max_y),
+                fmax(l.max_z, r.max_z)
             };
 
             // nodes[nodeId].aabb.min_x = min(nodes[nodes[nodeId].leftChildIndex].aabb.min_x, nodes[nodes[nodeId].rightChildIndex].aabb.min_x);
