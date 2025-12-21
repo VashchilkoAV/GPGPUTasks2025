@@ -194,8 +194,8 @@ static inline void make_basis(const float3 n,
         ? (float3)(0.0f, 0.0f, 1.0f)
         : (float3)(0.0f, 1.0f, 0.0f);
 
-    *t = normalize_f3(cross_f3(up, n));
-    *b = cross_f3(n, *t);
+    *t = normalize(cross(up, n));
+    *b = cross(n, *t);
 }
 
 __kernel void ray_tracing_render_using_lbvh(
@@ -257,7 +257,7 @@ __kernel void ray_tracing_render_using_lbvh(
 
         float3 e1 = (float3)(b.x - a.x, b.y - a.y, b.z - a.z);
         float3 e2 = (float3)(c.x - a.x, c.y - a.y, c.z - a.z);
-        float3 n  = normalize_f3(cross_f3(e1, e2));
+        float3 n  = normalize(cross(e1, e2));
 
         // ensure hemisphere is "outside" relative to the camera ray
         if (n.x * ray_direction.x +
@@ -272,8 +272,8 @@ __kernel void ray_tracing_render_using_lbvh(
                             ray_origin.z + tBest * ray_direction.z);
 
         float3 ac = (float3)(c.x - a.x, c.y - a.y, c.z - a.z);
-        float  scale = fmax(fmax(length_f3(e1), length_f3(e2)),
-                            length_f3(ac));
+        float  scale = fmax(fmax(length(e1), length(e2)),
+                            length(ac));
 
         float  eps = 1e-3f * fmax(1.0f, scale);
         float3 Po  = (float3)(P.x + n.x * eps,

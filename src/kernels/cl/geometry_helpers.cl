@@ -79,8 +79,8 @@ static inline bool intersect_ray_triangle(const float3 ray_o,
     const float3 e2 = (float3)(v2.x - v0.x, v2.y - v0.y, v2.z - v0.z);
 
     // pvec = d x e2
-    const float3 pvec = cross3(ray_d, e2);
-    const float  det  = dot3(e1, pvec);
+    const float3 pvec = cross(ray_d, e2);
+    const float  det  = dot(e1, pvec);
 
     const float eps = 1e-8f; // geometric epsilon
 
@@ -98,18 +98,18 @@ static inline bool intersect_ray_triangle(const float3 ray_o,
     const float3 s = (float3)(ray_o.x - v0.x,
                               ray_o.y - v0.y,
                               ray_o.z - v0.z);
-    *u = dot3(s, pvec) * invDet;
+    *u = dot(s, pvec) * invDet;
     if (*u < 0.0f || *u > 1.0f)
         return false;
 
     // qvec = s x e1; v = (d·qvec)/det
-    const float3 qvec = cross3(s, e1);
-    *v = dot3(ray_d, qvec) * invDet;
+    const float3 qvec = cross(s, e1);
+    *v = dot(ray_d, qvec) * invDet;
     if (*v < 0.0f || (*u + *v) > 1.0f)
         return false;
 
     // t = (e2·qvec)/det
-    *t = dot3(e2, qvec) * invDet;
+    *t = dot(e2, qvec) * invDet;
     if (*t < tMin || *t > tMax)
         return false;
 
