@@ -18,10 +18,25 @@ float lazycos(float angle)
 
     int iperiod = int(angle / 6.28318530718) % nsleep;
     if (iperiod < 3) {
-        return cos(angle);
+        return (cos(angle) + 1.0) / 2.0;
     }
 
     return 1.0;
+}
+
+float sdCapsule( vec3 p, vec3 a, vec3 b, float r )
+{
+  vec3 pa = p - a, ba = b - a;
+  float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+  return length(pa - ba * h) - r;
+}
+
+// exponential
+float smin( float a, float b, float k )
+{
+    k *= 1.0;
+    float r = exp2(-a/k) + exp2(-b/k);
+    return -k*log2(r);
 }
 
 // возможно, для конструирования тела пригодятся какие-то примитивы из набора https://iquilezles.org/articles/distfunctions/
@@ -32,6 +47,7 @@ vec4 sdBody(vec3 p)
 
     // TODO
     d = sdSphere((p - vec3(0.0, 0.35, -0.7)), 0.35);
+    d = smin(d, sdSphere((p - vec3(0.0, 0.55, -0.7)), 0.27), 0.05);
 
     // return distance and color
     return vec4(d, vec3(0.0, 1.0, 0.0));
@@ -42,20 +58,64 @@ vec4 sdEye(vec3 p)
 
     vec4 res = vec4(1e10, 0.0, 0.0, 0.0);
 
-    return res;
+    vec4 white = vec4(sdSphere((p - vec3(0.0, 0.5, -0.4)), 0.15), 1.0, 1.0, 1.0);
+    if (white.x < res.x) {
+        res = white;
+    }
+
+    vec4 blue = vec4(sdSphere((p - vec3(0.0, 0.5, -0.2)), 0.003), 0.0, 0.0, 1.0);
+    if (blue.x < res.x) {
+        res = blue;
+    }
+
+    vec4 black = vec4(sdSphere((p - vec3(0.0, 0.5, -0.1)), 0.001), 0.0, 0.0, 0.0);
+    if (black.x < res.x) {
+        res = black;
+    }
+
+    return vec4(smin(black.x, smin(white.x, blue.x, 0.05), 0.05), res.y, res.z, res.w);
 }
 
 vec4 sdMonster(vec3 p)
 {
     // при рисовании сложного объекта из нескольких SDF, удобно на верхнем уровне
     // модифицировать p, чтобы двигать объект как целое
-    p -= vec3(0.0, 0.08, 0.0);
+    p -= vec3(0.0, 0.15, 0.0);
 
     vec4 res = sdBody(p);
 
     vec4 eye = sdEye(p);
     if (eye.x < res.x) {
         res = eye;
+    }
+
+    float leftHandCos = lazycos(5.0 * iTime);
+    float leftHandSin = sqrt(1.0 - leftHandCos * leftHandCos);
+    mat2 leftHandRot = mat2(leftHandCos, -leftHandSin, leftHandSin, leftHandCos);
+
+    vec3 leftHandShoulder = vec3(-0.35, 0.35, -0.7);
+    vec2 leftHandDelta = leftHandRot * vec2(0.1, 0.173);
+    vec3 leftHandEnd = leftHandShoulder;
+    leftHandEnd.xy -= leftHandDelta;
+
+    vec4 leftHand = vec4(sdCapsule(p, leftHandShoulder, leftHandEnd, 0.03), 0.0, 1.0, 0.0);
+    if (leftHand.x < res.x) {
+        res = leftHand;
+    }
+
+    vec4 rightHand = vec4(sdCapsule(p, vec3(0.35, 0.35, -0.7), vec3(0.45, 0.35 - 0.173, -0.7), 0.03), 0.0, 1.0, 0.0);
+    if (rightHand.x < res.x) {
+        res = rightHand;
+    }
+
+    vec4 leftFoot = vec4(sdCapsule(p, vec3(-0.1, -0.1, -0.7), vec3(-0.1, 0.05, -0.7), 0.045), 0.0, 1.0, 0.0);
+    if (leftFoot.x < res.x) {
+        res = leftFoot;
+    }
+
+    vec4 rightFoot = vec4(sdCapsule(p, vec3(0.1, -0.1, -0.7), vec3(0.1, 0.05, -0.7), 0.045), 0.0, 1.0, 0.0);
+    if (rightFoot.x < res.x) {
+        res = rightFoot;
     }
 
     return res;
